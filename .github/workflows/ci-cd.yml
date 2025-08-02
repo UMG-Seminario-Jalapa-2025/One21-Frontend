@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Node.js / Build
+    name: Build
     runs-on: ubuntu-latest
 
     strategy:
@@ -37,10 +37,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-build
-          path: . # ajusta si quieres solo /dist o algo más específico
+          path: .
 
   test:
-    name: Node.js / Test
+    name: Test
     runs-on: ubuntu-latest
     needs: build
 
