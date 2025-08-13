@@ -13,6 +13,12 @@ RUN npm install
 # Copiar el resto de los archivos del proyecto
 COPY . .
 
+# Desactivar telemetría de Next (opcional, evita ruido)
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# EJECUTAR LOS ICONOS (si no existe el generador, no rompas el build)
+RUN npm run build:icons || echo "Skipping icons generation"
+
 # Construir la aplicación para producción
 RUN npm run build
 
