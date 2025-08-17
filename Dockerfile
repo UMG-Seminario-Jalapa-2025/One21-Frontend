@@ -1,29 +1,23 @@
-# Imagen base con Node
-FROM node:20-alpine
+# Use a Node.js base image
+FROM node:18-alpine
 
-# Establecer directorio de trabajo dentro del contenedor
+# Set the working directory
 WORKDIR /app
 
-# Copiar package.json y package-lock.json para instalar dependencias primero
+# Copy dependency files
 COPY package*.json ./
 
-# Instalar dependencias
+# Install dependencies
 RUN npm install
 
-# Copiar el resto de los archivos del proyecto
+# Copy the rest of the application
 COPY . .
 
-# Desactivar telemetría de Next (opcional, evita ruido)
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# EJECUTAR LOS ICONOS (si no existe el generador, no rompas el build)
-RUN npm run build:icons || echo "Skipping icons generation"
-
-# Construir la aplicación para producción
+# Build the application (if using React, Angular, Vue, etc.)
 RUN npm run build
 
-# Exponer el puerto que usa Next.js (por defecto 3000)
+# Expose the port (adjust according to your frontend)
 EXPOSE 3000
 
-# Comando para iniciar la aplicación
-CMD ["npm", "run", "start"]
+# Command to start the application
+CMD ["npm", "start"]
