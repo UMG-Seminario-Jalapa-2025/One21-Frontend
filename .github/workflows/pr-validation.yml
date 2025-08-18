@@ -1,0 +1,13 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  test-build:
+    uses: ./.github/workflows/test-build.yml
+    with:
+      environment: pr-${{ github.event.number }}

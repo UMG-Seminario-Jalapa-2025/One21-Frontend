@@ -1,23 +1,40 @@
-# Use a Node.js base image
-FROM node:18-alpine
+# Stage 1: Build
+FROM node:18-alpine AS builder
 
-# Set the working directory
 WORKDIR /app
 
-# Copy dependency files
-COPY package*.json ./
+# Copy manifest files first for better build caching
+COPY package*.json tsconfig.json ./
 
-# Install dependencies
-RUN npm install
+# Install ALL dependencies (including dev; required for 'tsx')
+RUN npm ci
 
-# Copy the rest of the application
+# Copy the rest of the source code
 COPY . .
 
-# Build the application (if using React, Angular, Vue, etc.)
+# Generate the icons required by the build
+RUN npm run build:icons
+
+# Build the Next.js application
 RUN npm run build
 
-# Expose the port (adjust according to your frontend)
+
+# Stage 2: Runtime (lightweight)
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Install only production dependencies in the final image
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy build artifacts from the builder stage
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/package.json ./package.json
+
+# Expose application port
 EXPOSE 3000
 
-# Command to start the application
+# Start the application
 CMD ["npm", "start"]
