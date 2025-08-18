@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - main
 
 env:
   IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.FRONTEND_DEPLOY_NAME }}
