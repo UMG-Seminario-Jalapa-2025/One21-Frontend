@@ -12,4 +12,4 @@ jobs:
   test-build:
     uses: ./.github/workflows/test-build.yml
     with:
-      environment: pr-${{ github.event.number }}
+      environment: pr-${{ github.event.number || 'merge-queue' }}
