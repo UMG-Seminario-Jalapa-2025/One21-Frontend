@@ -50,7 +50,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuItem href='/home' icon={<i className='tabler-smart-home' />}>Inicio</MenuItem>
-        <MenuItem href='/dashboard' icon={<i className='tabler-dashboard' />}>Dashboard</MenuItem>
+        <MenuItem href='/dashboard' icon={<i className='tabler-dashboard' />}>Panel de control</MenuItem>
 
         <MenuSection label='Módulos ERP'>
           <SubMenu label='Compras' icon={<i className='tabler-shopping-cart' />}>
@@ -65,19 +65,19 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
             <MenuItem href='/sales/reports'>Reportes</MenuItem>
           </SubMenu>
 
-          <SubMenu label='Inventario' icon={<i className='tabler-box' />}>
-            <MenuItem href='/inventory/products'>Productos</MenuItem>
+          <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
+            <MenuItem href='/ticket'>Productos</MenuItem>
             <MenuItem href='/inventory/movements'>Movimientos</MenuItem>
             <MenuItem href='/inventory/categories'>Categorías</MenuItem>
           </SubMenu>
 
           <SubMenu label='Administración' icon={<i className='tabler-settings' />}>
-            <MenuItem href='/admin/users'>Usuarios</MenuItem>
+            <MenuItem href='/Empleados'>Usuarios</MenuItem>
             <MenuItem href='/admin/roles'>Roles</MenuItem>
             <MenuItem href='/admin/suppliers'>Proveedores</MenuItem>
           </SubMenu>
         </MenuSection>
-        <MenuItem href='/settings' icon={<i className='tabler-settings' />}>Configuración</MenuItem>
+        <MenuItem href='/configuracion' icon={<i className='tabler-settings' />}>Configuración</MenuItem>
       </Menu>
     </ScrollWrapper>
   )

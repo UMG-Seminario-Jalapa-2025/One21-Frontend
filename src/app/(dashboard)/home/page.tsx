@@ -1,3 +1,11 @@
-export default function Page() {
-  return <h1>Bienvenido a One21 ERP!</h1>
+import ProtectedRoute from '@/components/ProtectedRoute'
+
+export default function HomePage() {
+  return (
+    <ProtectedRoute>
+      <div className="p-4">
+        <h1>Bienvenido al Home</h1>
+      </div>
+    </ProtectedRoute>
+  )
 }
