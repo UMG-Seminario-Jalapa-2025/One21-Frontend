@@ -1,23 +1,18 @@
+import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+  const { pathname } = request.nextUrl
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/home')
-
-  if (!token && isProtectedRoute) {
+  // Redirige SIEMPRE (sin importar cookies)
+  if (pathname !== '/login') {
     return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL('/home', request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/login', '/home/:path*']
+  matcher: ['/((?!_next|favicon.ico|images|api|static).*)'],
+  runtime: 'nodejs'
 }
