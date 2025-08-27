@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = data?.access_token
+    
     if (!token) {
       return NextResponse.json({ message: 'Token no recibido' }, { status: 401 })
     }
