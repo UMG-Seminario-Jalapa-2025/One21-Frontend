@@ -51,8 +51,7 @@ spec:
             - configMapRef:
                 name: {{ include "one21-frontend.fullname" . }}-config
             - secretRef:
-                name: secret-ref
-                optional: true
+                name: frontend-secret
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
