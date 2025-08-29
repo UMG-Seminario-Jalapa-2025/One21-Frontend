@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const { username, password } = body
 
   try {
-    const res = await fetch(`${process.env.AUTH_API_BASE}/auth/login`, {
+    const res = await fetch(`${process.env.AUTH_API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
