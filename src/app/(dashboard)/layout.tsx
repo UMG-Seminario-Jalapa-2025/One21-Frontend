@@ -1,3 +1,6 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+
 // MUI Imports
 import Button from '@mui/material/Button'
 
@@ -24,7 +27,14 @@ import { getMode, getSystemMode } from '@core/utils/serverHelpers'
 const Layout = async (props: ChildrenType) => {
   const { children } = props
 
-  // Vars
+  // ✅ Validación del token sin await
+  const cookieStore = await cookies()
+  const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
+
+  if (!token) {
+    redirect('/login')
+  }
+
   const direction = 'ltr'
   const mode = await getMode()
   const systemMode = await getSystemMode()

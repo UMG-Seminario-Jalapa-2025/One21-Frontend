@@ -63,9 +63,17 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
-    // Redirect to login page
-    router.push('/login')
+  try {
+    await fetch('/api/logout', {
+      method: 'POST'
+    })
+
+    router.replace('/login')
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error)
   }
+}
+
 
   return (
     <>

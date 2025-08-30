@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "nombre": "John Doe",
+    "email": "john@example.com",
+    "telefono": "123-456-7890",
+    "fecha": "2023-05-14",
+    "activo": true
+  },
+  {
+    "id": 2,
+    "nombre": "Jane Smith",
+    "email": "jane@example.com",
+    "telefono": "987-654-3210",
+    "fecha": "2023-06-19",
+    "activo": false
+  },
+  {
+    "id": 3,
+    "nombre": "Carlos Pérez",
+    "email": "carlos@empresa.com",
+    "telefono": "555-1234",
+    "fecha": "2023-07-01",
+    "activo": true
+  }
+]
