@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from 'react'
 
-import ProtectedRoute from '@/components/ProtectedRoute'
 
 import type { ColumnDef } from '../../../components/datagrid/DataGrid'
 import DataGrid from '../../../components/datagrid/DataGrid'
@@ -42,7 +41,7 @@ export default function Page() {
     const q = query.trim().toLowerCase()
 
     if (!q) return data
-    
+
     return data.filter(
       r =>
         r.nombre.toLowerCase().includes(q) ||
@@ -116,7 +115,6 @@ export default function Page() {
   ], [setData])
 
   return (
-    <ProtectedRoute>
       <div className='space-y-4'>
       {/* Header */}
       <div className='flex items-center justify-between'>
@@ -180,9 +178,8 @@ export default function Page() {
         onCancel={() => setConfirmDel({ open: false })}
       />
       </div>
-    </ProtectedRoute>
 
 
-    
+
   )
 }
