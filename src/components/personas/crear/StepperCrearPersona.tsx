@@ -18,7 +18,7 @@ const StepperCrearPersona = () => {
   const [activeStep, setActiveStep] = useState(0)
   const router = useRouter()
 
-  const [personaFormData, setPersonaFormData] = useState({
+  const [personaFormData, setPersonaFormData] = useState<any>({
     nombres: '',
     apellidos: '',
     dpi: '',

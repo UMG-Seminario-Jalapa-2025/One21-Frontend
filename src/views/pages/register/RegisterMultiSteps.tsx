@@ -87,7 +87,7 @@ const Step = styled(MuiStep)<StepProps>(({ theme }) => ({
 
 const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
   const [activeStep, setActiveStep] = useState<number>(0)
-  const [formData, setFormData] = useState(initialFormData)
+  const [formData, setFormData] = useState<any>(initialFormData)
 
   const lightImg = '/images/project/logo.png'
   const darkImg = '/images/project/logoWhite.png'
