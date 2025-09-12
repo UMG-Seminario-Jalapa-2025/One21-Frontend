@@ -3,10 +3,28 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   basePath: process.env.BASEPATH,
   reactStrictMode: true,
-  redirects: async () => {
+  async redirects() {
     return [
       {
         source: '/',
+        destination: '/login',
+        permanent: true,
+        locale: false
+      },
+      {
+        source: '/home',
+        destination: '/login',
+        permanent: true,
+        locale: false
+      },
+      {
+        source: '/:locale(en|fr|ar)',
+        destination: '/login',
+        permanent: true,
+        locale: false
+      },
+      {
+        source: '/:locale(en|fr|ar)/home',
         destination: '/login',
         permanent: true,
         locale: false
