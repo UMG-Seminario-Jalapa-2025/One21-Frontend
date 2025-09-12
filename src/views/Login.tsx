@@ -184,6 +184,14 @@ const handleSubmit = async (e: FormEvent) => {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
+
+          <div className='flex justify-center items-center gap-2 mt-4'>
+            <Typography>¿No tienes cuenta?</Typography>
+            <Link href='/register' className='text-primary'>
+              Crear cuenta
+            </Link>
+          </div>
+
         </div>
       </div>
     </div>
