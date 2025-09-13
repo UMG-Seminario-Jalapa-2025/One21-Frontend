@@ -107,7 +107,7 @@ const handleSubmit = async (e: FormEvent) => {
     }
 
     // Redirigir si login fue exitoso (el token ya está en cookie)
-    router.replace('/home')
+    router.replace('/inicio')
   } catch (err: any) {
     console.log(err.message || 'Error de autenticación')
   } finally {

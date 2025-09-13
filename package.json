@@ -74,8 +74,10 @@
     "react-use": "17.6.0",
     "recharts": "2.15.0",
     "server-only": "0.0.1",
-    "valibot": "0.42.1"
-  },
+    "valibot": "0.42.1",
+     "cookie": "^1.0.2",
+     "jose": "^6.0.13"
+   },
   "devDependencies": {
     "@iconify/json": "2.2.286",
     "@iconify/tools": "4.1.1",

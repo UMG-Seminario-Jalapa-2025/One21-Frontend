@@ -5,6 +5,7 @@ export default async function ProtectedRouteServer({ children }: { children: Rea
   const cookieStore = await cookies()
   const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
 
+  console.log('token', { token })
 
   if (!token?.value) {
     redirect('/login')
