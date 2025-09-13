@@ -105,20 +105,44 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
     router.push('/login')
   }
 
-  const handleSave = () => {
-    const fullAddress = `${formData.street || ''} ${formData.number || ''}, Zona ${formData.zone || ''}, ${formData.neighborhood || ''}, ${formData.city || ''}, ${formData.state || ''}`
-      .replace(/\s+/g, ' ')
-      .trim()
+  const handleSave = async () => {
+  try {
 
+    // Adaptar payload a lo que espera la API
     const payload = {
-      ...formData,
-      address: fullAddress
+      username: formData.username,
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      realmRoles: ["client-one21"], // 🔥 fijo
     }
 
-    console.log('Guardando datos...', payload)
+    console.log("Guardando datos...", payload)
 
-    router.push('/register/confirmation')
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      console.error("Error al crear usuario:", data)
+      alert(data?.message || "Error al crear usuario")
+
+      return
+    }
+
+    console.log("Usuario creado con éxito:", data)
+
+    router.push("/register/confirmation")
+  } catch (error) {
+    console.error("Error en handleSave:", error)
+    alert("Error inesperado al guardar usuario")
   }
+}
+
 
   const getStepContent = (step: number) => {
     switch (step) {
@@ -165,7 +189,7 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
 
       <div className="flex flex-1 justify-center items-center bs-full bg-backgroundPaper">
         <Link
-          href={getLocalizedUrl('/')}
+          href={getLocalizedUrl()}
           className="absolute block-start-5 sm:block-start-[33px] inline-start-6 sm:inline-start-[38px]"
         >
           <Logo />

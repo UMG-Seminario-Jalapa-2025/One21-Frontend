@@ -19,7 +19,7 @@ const ConfirmationPage = () => {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(interval)
-          router.push(getLocalizedUrl('/login'))
+          router.push(getLocalizedUrl())
         }
 
         return prev - 1
@@ -41,7 +41,7 @@ const ConfirmationPage = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => router.push(getLocalizedUrl('/login'))}
+        onClick={() => router.push(getLocalizedUrl())}
       >
         Ir a login ahora
       </Button>
