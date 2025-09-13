@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}` // ✅ token dinámico
       },
       body: JSON.stringify(userPayload)
     })
@@ -72,8 +72,8 @@ export async function POST(req: NextRequest) {
       code: body.username,
       name: `${body.firstName} ${body.lastName}`,
       commercialName: `${body.firstName} ${body.lastName}`,
-      type: { id: 1 },       
-      category: { id: 1 },   
+      type: { id: 1 },
+      category: { id: 1 },
       email: body.email,
       phone: body.mobile,
       isActive: true
@@ -81,7 +81,10 @@ export async function POST(req: NextRequest) {
 
     const partnerRes = await fetch(`${baseUrl}partners/partners`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}` // ✅ token dinámico
+      },
       body: JSON.stringify(partnerPayload)
     })
 
@@ -93,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     const partnerId = partnerData.id
 
-    // 🔹 4. Crear Address (endpoint nuevo)
+    // 🔹 4. Crear Address
     const addressPayload = {
       businessPartner: { id: partnerId },
       addressType: 'HOME',
@@ -110,11 +113,18 @@ export async function POST(req: NextRequest) {
 
     const addressRes = await fetch(`${baseUrl}partners/addresses`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}` // ✅ token dinámico
+      },
       body: JSON.stringify(addressPayload)
     })
 
     const addressData = await addressRes.json()
+
+    if (!addressRes.ok) {
+      return NextResponse.json({ step: 'address', message: addressData?.message || 'Error al crear dirección' }, { status: addressRes.status })
+    }
 
     return NextResponse.json(
       { message: 'Usuario, Partner y Dirección creados con éxito', user: userData, partner: partnerData, address: addressData },
@@ -123,6 +133,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('Error en /api/pather:', err)
 
-return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
 }
