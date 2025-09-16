@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import type { CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
+
 import styled from '@emotion/styled'
 
 import type { VerticalNavContextProps } from '@menu/contexts/verticalNavContext'
@@ -54,11 +54,7 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   return (
     <div className="flex items-center ms-3 mt-2">
-      <img
-        src={logoSrc}
-        alt="Logo"
-        className="w-12 h-auto object-contain"
-      />
+      <img src={logoSrc} alt="Logo" className="w-12 h-auto object-contain" />
       <LogoText
         ref={logoTextRef}
         color={color}

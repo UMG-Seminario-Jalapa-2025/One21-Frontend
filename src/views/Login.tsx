@@ -3,6 +3,8 @@
 // React Imports
 import { useState } from 'react'
 
+import type { FormEvent } from 'react'
+
 // Next Imports
 import { useRouter } from 'next/navigation'
 
@@ -12,10 +14,9 @@ import { styled, useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
-import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Divider from '@mui/material/Divider'
+
+
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -28,8 +29,6 @@ import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
 import CustomTextField from '@core/components/mui/TextField'
 
-// Config Imports
-import themeConfig from '@configs/themeConfig'
 
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
@@ -42,12 +41,8 @@ const LoginIllustration = styled('img')(({ theme }) => ({
   maxBlockSize: 680,
   maxInlineSize: '100%',
   margin: theme.spacing(12),
-  [theme.breakpoints.down(1536)]: {
-    maxBlockSize: 550
-  },
-  [theme.breakpoints.down('lg')]: {
-    maxBlockSize: 450
-  }
+  [theme.breakpoints.down(1536)]: { maxBlockSize: 550 },
+  [theme.breakpoints.down('lg')]: { maxBlockSize: 450 }
 }))
 
 const MaskImg = styled('img')({
@@ -62,6 +57,9 @@ const MaskImg = styled('img')({
 const LoginV2 = ({ mode }: { mode: SystemMode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
@@ -88,14 +86,43 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
+
+// const AUTH_API_BASE = process.env.AUTH_API_BASE
+
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error de autenticación')
+    }
+
+    // Redirigir si login fue exitoso (el token ya está en cookie)
+    router.replace('/home')
+  } catch (err: any) {
+    console.log(err.message || 'Error de autenticación')
+  } finally {
+    setLoading(false)
+  }
+}
+
+
+
   return (
     <div className='flex bs-full justify-center'>
       <div
         className={classnames(
           'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
-          {
-            'border-ie': settings.skin === 'bordered'
-          }
+          { 'border-ie': settings.skin === 'bordered' }
         )}
       >
         <LoginIllustration src={characterIllustration} alt='character-illustration' />
@@ -113,30 +140,38 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
         </Link>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div className='flex flex-col gap-1'>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>{`Bienvenido a ONE21 ERP! 👋🏻`}</Typography>
+            <Typography>Por favor inicia sesion</Typography>
           </div>
-          <form
-            noValidate
-            autoComplete='off'
-            onSubmit={e => {
-              e.preventDefault()
-              router.push('/')
-            }}
-            className='flex flex-col gap-5'
-          >
-            <CustomTextField autoFocus fullWidth label='Email or Username' placeholder='Enter your email or username' />
+
+          <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
+            <CustomTextField
+              autoFocus
+              fullWidth
+              label='Correo'
+              placeholder='Ingresa tu correo electronico'
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+            />
             <CustomTextField
               fullWidth
-              label='Password'
+              label='Contraseña'
               placeholder='············'
               id='outlined-adornment-password'
               type={isPasswordShown ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
               slotProps={{
                 input: {
                   endAdornment: (
                     <InputAdornment position='end'>
-                      <IconButton edge='end' onClick={handleClickShowPassword} onMouseDown={e => e.preventDefault()}>
+                      <IconButton
+                        edge='end'
+                        onClick={handleClickShowPassword}
+                        onMouseDown={e => e.preventDefault()}
+                      >
                         <i className={isPasswordShown ? 'tabler-eye-off' : 'tabler-eye'} />
                       </IconButton>
                     </InputAdornment>
@@ -144,36 +179,10 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
                 }
               }}
             />
-            <div className='flex justify-between items-center gap-x-3 gap-y-1 flex-wrap'>
-              <FormControlLabel control={<Checkbox />} label='Remember me' />
-              <Typography className='text-end' color='primary.main' component={Link}>
-                Forgot password?
-              </Typography>
-            </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Login
+
+            <Button fullWidth variant='contained' type='submit' disabled={loading} onClick={handleSubmit}>
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
-            <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
-              <Typography component={Link} color='primary.main'>
-                Create an account
-              </Typography>
-            </div>
-            <Divider className='gap-2 text-textPrimary'>or</Divider>
-            <div className='flex justify-center items-center gap-1.5'>
-              <IconButton className='text-facebook' size='small'>
-                <i className='tabler-brand-facebook-filled' />
-              </IconButton>
-              <IconButton className='text-twitter' size='small'>
-                <i className='tabler-brand-twitter-filled' />
-              </IconButton>
-              <IconButton className='text-textPrimary' size='small'>
-                <i className='tabler-brand-github-filled' />
-              </IconButton>
-              <IconButton className='text-error' size='small'>
-                <i className='tabler-brand-google-filled' />
-              </IconButton>
-            </div>
           </form>
         </div>
       </div>
