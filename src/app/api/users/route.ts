@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     const tenant = body.tenant || process.env.NEXT_PUBLIC_INGRESS_CLIENT_TENANT
 
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081/api/'
+    const baseUrlTemp = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
     // 🔹 1. Login para token dinámico
     const loginRes = await fetch(`${baseUrl}auth/login`, {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}` // ✅ token dinámico
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(userPayload)
     })
@@ -71,19 +72,21 @@ export async function POST(req: NextRequest) {
     const partnerPayload = {
       code: body.username,
       name: `${body.firstName} ${body.lastName}`,
-      commercialName: `${body.firstName} ${body.lastName}`,
-      type: { id: 1 },
-      category: { id: 1 },
+      tax_id: body.taxId || 'String',
       email: body.email,
-      phone: body.mobile,
-      isActive: true
+      isActive: true,
+      isCustomer: true,
+      isVendor: false,
+      isEmployee: false,
+      notes: body.notes || null,
+      created_by: 1
     }
 
-    const partnerRes = await fetch(`${baseUrl}partners/partners`, {
+    const partnerRes = await fetch(`${baseUrlTemp}partners/partners`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}` // ✅ token dinámico
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(partnerPayload)
     })
@@ -96,29 +99,27 @@ export async function POST(req: NextRequest) {
 
     const partnerId = partnerData.id
 
-    // 🔹 4. Crear Address
     const addressPayload = {
       businessPartner: { id: partnerId },
       addressType: 'HOME',
-      street: body.street,
-      street2: body.number,
+      street: body.street || 'Principal',
+      street2: body.number || null,
       neighborhood: body.neighborhood,
-      postalCode: body.zone,
-      city: { id: 1 },
-      state: { id: 1 },
-      country: { id: 1 },
-      isDefault: true,
-      isActive: true
+      postalCode: body.postalCode,
+      isDefault: 1,
+      isActive: 1
     }
 
-    const addressRes = await fetch(`${baseUrl}partners/addresses`, {
+    const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}` // ✅ token dinámico
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(addressPayload)
     })
+
+    console.log('addressRes', addressRes)
 
     const addressData = await addressRes.json()
 
