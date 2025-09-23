@@ -33,6 +33,8 @@ import { useLoading } from '@/components/ui/LoadingModal'
 
 import { showAlert } from "@/components/ui/AlertProvider"
 
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+
 type Persona = {
   id: number
   code: string
@@ -55,6 +57,11 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean
+    persona?: Persona
+  }>({ open: false })
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -150,6 +157,38 @@ export default function PersonasPage() {
     handleActualizarPartner({ partnerId: persona.id, isVendor: true })
   }
 
+  // Eliminar persona
+  const handleEliminar = async (persona: Persona) => {
+    try {
+      esperar()
+
+      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        showAlert('error', data?.message || 'Error al eliminar persona')
+        throw new Error(data.message || 'Error al eliminar persona')
+      }
+
+      showAlert('success', `Persona ${persona.name} eliminada con éxito`)
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error eliminando persona:', error)
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al eliminar persona',
+        severity: 'error'
+      })
+    } finally {
+      finEspera()
+    }
+  }
+
+
+
   const columns = useMemo(
     () => [
       columnHelper.accessor('code', { header: 'Código' }),
@@ -209,7 +248,7 @@ export default function PersonasPage() {
               </Tooltip>
 
               <Tooltip title="Eliminar">
-                <IconButton color="error" size="small">
+                <IconButton color="error" size="small" onClick={() => setConfirmDialog({ open: true, persona })}>
                   <i className="tabler-trash-off" />
                 </IconButton>
               </Tooltip>
@@ -298,6 +337,23 @@ export default function PersonasPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title="Confirmar eliminación"
+        message={`¿Seguro que deseas eliminar a "${confirmDialog.persona?.name}"?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (confirmDialog.persona) {
+            handleEliminar(confirmDialog.persona)
+          }
+
+          setConfirmDialog({ open: false })
+        }}
+        onCancel={() => setConfirmDialog({ open: false })}
+      />
+
     </div>
   )
 }
