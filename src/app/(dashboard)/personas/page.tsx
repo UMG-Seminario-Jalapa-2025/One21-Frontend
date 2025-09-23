@@ -13,6 +13,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Pagination from '@mui/material/Pagination'
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
 
 // React Table
 import {
@@ -26,7 +28,10 @@ import {
 // Styles
 import styles from '@core/styles/table.module.css'
 
+// Custom hook
 import { useLoading } from '@/components/ui/LoadingModal'
+
+import { showAlert } from "@/components/ui/AlertProvider"
 
 type Persona = {
   id: number
@@ -50,26 +55,68 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  })
+
   const { esperar, finEspera } = useLoading()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        esperar()
-        const res = await fetch('/api/personas/obtener')
-        const data: Persona[] = await res.json()
+  const fetchData = async () => {
+    try {
+      esperar()
+      const res = await fetch('/api/personas/obtener')
+      const data: Persona[] = await res.json()
 
-        setPersonas(data)
-        finEspera()
-      } catch (error) {
-        console.error('Error cargando personas', error)
-      } finally {
-        setLoading(false)
-      }
+      setPersonas(data)
+      finEspera()
+    } catch (error) {
+      console.error('Error cargando personas', error)
+      finEspera()
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
+
+  // Crear usuario desde la fila
+  const handleCrearUsuario = async (persona: Persona) => {
+    try {
+      esperar()
+
+      const payload = {
+        username: persona.code, 
+        email: persona.email,
+        partnerId: persona.id
+      }
+
+      const res = await fetch('/api/personas/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        showAlert('error', data?.message || 'Error al crear usuario')
+        throw new Error(data.message || 'Error al crear usuario')
+      }
+
+      showAlert('success', 'Usuario creado con éxito')
+      await fetchData() // refrescar tabla
+    } catch (error: any) {
+      console.error('Error creando usuario:', error)
+      setSnackbar({ open: true, message: error.message || 'Error al crear usuario', severity: 'error' })
+    } finally {
+      finEspera()
+    }
+  }
 
   const columns = useMemo(
     () => [
@@ -88,10 +135,14 @@ export default function PersonasPage() {
 
           return (
             <div className="flex gap-2 justify-center">
-              {/* Si NO es cliente → solo botón Hacer usuario */}
+              {/* Si NO es cliente → botón Hacer usuario */}
               {!persona.isCustomer && (
                 <Tooltip title="Hacer usuario">
-                  <IconButton color="primary" size="small">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleCrearUsuario(persona)}
+                  >
                     <i className="tabler-user-plus" />
                   </IconButton>
                 </Tooltip>
@@ -113,14 +164,12 @@ export default function PersonasPage() {
                 </>
               )}
 
-              {/* Editar siempre visible */}
               <Tooltip title="Editar">
                 <IconButton color="info" size="small">
                   <i className="tabler-edit" />
                 </IconButton>
               </Tooltip>
 
-              {/* Eliminar siempre visible */}
               <Tooltip title="Eliminar">
                 <IconButton color="error" size="small">
                   <i className="tabler-trash-off" />
@@ -169,10 +218,7 @@ export default function PersonasPage() {
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
                       <th key={header.id}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
                   </tr>
@@ -182,12 +228,7 @@ export default function PersonasPage() {
                 {table.getRowModel().rows.map(row => (
                   <tr key={row.id}>
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
+                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}
                   </tr>
                 ))}
@@ -195,7 +236,6 @@ export default function PersonasPage() {
             </table>
           </div>
 
-          {/* Paginación */}
           <div className="flex justify-center py-4">
             <Pagination
               count={table.getPageCount()}
@@ -206,6 +246,20 @@ export default function PersonasPage() {
           </div>
         </Card>
       )}
+
+      {/* Notificación */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   )
 }
