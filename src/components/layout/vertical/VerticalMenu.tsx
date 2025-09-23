@@ -50,24 +50,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuItem href='/inicio' icon={<i className='tabler-smart-home' />}>Inicio</MenuItem>
-        <MenuItem href='/dashboard' icon={<i className='tabler-dashboard' />}>Panel de control</MenuItem>
 
         <MenuSection label='Módulos ERP'>
-          <SubMenu label='Compras' icon={<i className='tabler-shopping-cart' />}>
-            <MenuItem href='/purchases/orders'>Órdenes</MenuItem>
-            <MenuItem href='/purchases/requests'>Solicitudes</MenuItem>
-            <MenuItem href='/purchases/reports'>Reportes</MenuItem>
-          </SubMenu>
 
           <MenuItem href='/Empleados' icon={<i className='tabler-user' />}>Empleados</MenuItem>
           <MenuItem href='/personas' icon={<i className='tabler-users' />}>Personas</MenuItem>
-
-
-          <SubMenu label='Ventas' icon={<i className='tabler-cash-register' />}>
-            <MenuItem href='/sales/invoices'>Facturas</MenuItem>
-            <MenuItem href='/sales/clients'>Clientes</MenuItem>
-            <MenuItem href='/sales/reports'>Reportes</MenuItem>
-          </SubMenu>
 
           <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
             <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>

@@ -12,9 +12,16 @@ import Typography from '@mui/material/Typography'
 import StepPersonaInfo from './StepPersonaInfo'
 import StepPersonaDireccion from './StepPersonaDireccion'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+import { showAlert } from "@/components/ui/AlertProvider"
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const steps = ['Información de la Persona', 'Dirección']
 
 const StepperCrearPersona = () => {
+
+  const { esperar, finEspera } = useLoading()
   const [activeStep, setActiveStep] = useState(0)
   const router = useRouter()
 
@@ -24,6 +31,7 @@ const StepperCrearPersona = () => {
     dpi: '',
     telefono: '',
     calle: '',
+    correo: '',
     numero: '',
     zona: '',
     colonia: '',
@@ -39,13 +47,32 @@ const StepperCrearPersona = () => {
     router.push('/personas')
   }
 
-  const handleSave = () => {
-    console.log('✅ Guardando persona...', personaFormData)
+  const handleSave = async () => {
+    try {
+      esperar()
 
-    // Aquí iría tu lógica para POST a la API
-    // await fetch('/api/personas', { method: 'POST', body: JSON.stringify(personaFormData) })
+      const res = await fetch('/api/pather', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(personaFormData)
+      })
 
-    router.push('/personas')
+      const data = await res.json()
+
+      if (!res.ok) {
+        showAlert('error', data?.message || 'Error al guardar persona')
+
+        return
+      }
+
+      showAlert('success', 'Persona creada con éxito')
+      router.push('/personas')
+    } catch (err) {
+      console.error(err)
+      showAlert('error', 'Error interno al guardar persona')
+    } finally {
+      finEspera()
+    }
   }
 
   return (

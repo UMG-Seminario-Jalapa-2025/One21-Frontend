@@ -29,6 +29,13 @@ import { useSettings } from '@core/hooks/useSettings'
 
 import { getLocalizedUrl } from '@/utils/i18n'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+import { showAlert } from "@/components/ui/AlertProvider"
+
+
+
+
 // Imagen ilustrativa
 const RegisterIllustration = styled('img')(({ theme }) => ({
   zIndex: 2,
@@ -88,7 +95,7 @@ const Step = styled(MuiStep)<StepProps>(({ theme }) => ({
 const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
   const [activeStep, setActiveStep] = useState<number>(0)
   const [formData, setFormData] = useState<any>(initialFormData)
-
+  const { esperar, finEspera } = useLoading()
   const lightImg = '/images/project/logo.png'
   const darkImg = '/images/project/logoWhite.png'
 
@@ -107,6 +114,7 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
 
   const handleSave = async () => {
   try {
+    esperar()
 
     // Adaptar payload a lo que espera la API
     const payload = {
@@ -128,18 +136,31 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
     const data = await res.json()
 
     if (!res.ok) {
-      console.error("Error al crear usuario:", data)
-      alert(data?.message || "Error al crear usuario")
+      console.error("Error:", data)
+      finEspera()
+
+      if (data.step === "user") {
+        showAlert("error", `Error en Usuario: ${data.message}`)
+      } else if (data.step === "partner") {
+        showAlert("error", `Error en Socio de negocio: ${data.message}`)
+      } else if (data.step === "address") {
+        showAlert("error", `Error en Dirección: ${data.message}`)
+      } else {
+        showAlert("error", `Error: ${data.message || 'Error desconocido'}`)
+      }
 
       return
     }
 
+
     console.log("Usuario creado con éxito:", data)
+    finEspera()
+    showAlert("success", "Usuario registrado con éxito. Revisa tu email para más instrucciones.")
 
     router.push("/register/confirmation")
   } catch (error) {
     console.error("Error en handleSave:", error)
-    alert("Error inesperado al guardar usuario")
+    showAlert("error", "Error inesperado al guardar usuario")
   }
 }
 
