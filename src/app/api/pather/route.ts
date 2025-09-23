@@ -15,16 +15,23 @@ export async function POST(req: NextRequest) {
 
     const token = tokenCookie.value
 
+
+    // Generar code → "on" + primeras 3 letras del nombre + apellido
+    const code =
+      'on' +
+      (body.nombres?.substring(0, 3) || '').toLowerCase() +
+      (body.apellidos || '')
+
     const partnerPayload = {
-      code: '502',
-      name: `${body.firstName} ${body.lastName}`,
-      tax_id: body.taxId || 'String',
-      email: body.email,
+      code,
+      name: `${body.nombres} ${body.apellidos}`,
+      tax_id: body.dpi || 'String',
+      email: body.correo,
       isActive: true,
       isCustomer: true,
       isVendor: false,
       isEmployee: false,
-      notes: body.notes || null,
+      notes: body.referencia || null,
       created_by: 1
     }
 
@@ -40,7 +47,6 @@ export async function POST(req: NextRequest) {
     let partnerData: any
     const partnerContentType = partnerRes.headers.get('content-type')
 
-
     if (partnerContentType && partnerContentType.includes('application/json')) {
       partnerData = await partnerRes.json()
     } else {
@@ -55,7 +61,11 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { step: 'partner', error: partnerData?.error || 'partner_error', message: partnerData?.detail || partnerData?.message || 'Error al crear partner' },
+        {
+          step: 'partner',
+          error: partnerData?.error || 'partner_error',
+          message: partnerData?.detail || partnerData?.message || 'Error al crear partner'
+        },
         { status: statusCode }
       )
     }
@@ -65,10 +75,10 @@ export async function POST(req: NextRequest) {
     const addressPayload = {
       businessPartner: { id: partnerId },
       addressType: 'HOME',
-      street: body.street || 'Principal',
-      street2: body.number || null,
-      neighborhood: body.neighborhood,
-      postalCode: body.postalCode,
+      street: body.calle || 'Principal',
+      street2: body.numero || null,
+      neighborhood: body.colonia,
+      postalCode: body.zona,
       isDefault: 1,
       isActive: 1
     }
@@ -99,7 +109,11 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { step: 'address', error: addressData?.error || 'address_error', message: addressData?.detail || addressData?.message || 'Error al crear dirección' },
+        {
+          step: 'address',
+          error: addressData?.error || 'address_error',
+          message: addressData?.detail || addressData?.message || 'Error al crear dirección'
+        },
         { status: statusCode }
       )
     }
