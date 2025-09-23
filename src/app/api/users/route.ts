@@ -5,7 +5,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    // 🔹 Credenciales
     const username = process.env.NEXT_PUBLIC_INGRESS_CLIENT_USERNAME
     const password = body.password || process.env.NEXT_PUBLIC_INGRESS_CLIENT_PASSWORD
     const tenant = body.tenant || process.env.NEXT_PUBLIC_INGRESS_CLIENT_TENANT
@@ -13,7 +12,6 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081/api/'
     const baseUrlTemp = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
-    // 🔹 1. Login para token dinámico
     const loginRes = await fetch(`${baseUrl}auth/login`, {
       method: 'POST',
       headers: {
@@ -45,7 +43,6 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { username: _, password: __, tenant: ___, ...userPayload } = body
 
-    // 🔹 2. Crear User
     const userRes = await fetch(`${baseUrl}admin/users`, {
       method: 'POST',
       headers: {
@@ -63,12 +60,26 @@ export async function POST(req: NextRequest) {
     } else {
       userData = { message: await userRes.text() }
     }
-
+    
     if (!userRes.ok) {
-      return NextResponse.json({ step: 'user', message: userData?.message || 'Error al crear usuario' }, { status: userRes.status })
+      let statusCode = userRes.status
+
+      if (userData?.detail?.includes('same username')) {
+        statusCode = 409
+      } else if (userData?.detail?.includes('execute actions email')) {
+        statusCode = 502
+      }
+
+      return NextResponse.json(
+        {
+          step: 'user',
+          error: userData?.error || 'user_error',
+          message: userData?.detail || userData?.message || 'Error al crear usuario'
+        },
+        { status: statusCode }
+      )
     }
 
-    // 🔹 3. Crear Partner
     const partnerPayload = {
       code: body.username,
       name: `${body.firstName} ${body.lastName}`,
@@ -91,10 +102,30 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(partnerPayload)
     })
 
-    const partnerData = await partnerRes.json()
+    let partnerData: any
+    const partnerContentType = partnerRes.headers.get('content-type')
+
+    if (partnerContentType && partnerContentType.includes('application/json')) {
+      partnerData = await partnerRes.json()
+    } else {
+      partnerData = { message: await partnerRes.text() }
+    }
 
     if (!partnerRes.ok) {
-      return NextResponse.json({ step: 'partner', message: partnerData?.message || 'Error al crear partner' }, { status: partnerRes.status })
+      let statusCode = partnerRes.status
+
+      if (partnerData?.detail?.includes('duplicate key')) {
+        statusCode = 409
+      }
+
+      return NextResponse.json(
+        {
+          step: 'partner',
+          error: partnerData?.error || 'partner_error',
+          message: partnerData?.detail || partnerData?.message || 'Error al crear partner'
+        },
+        { status: statusCode }
+      )
     }
 
     const partnerId = partnerData.id
@@ -121,10 +152,30 @@ export async function POST(req: NextRequest) {
 
     console.log('addressRes', addressRes)
 
-    const addressData = await addressRes.json()
+    let addressData: any
+    const addressContentType = addressRes.headers.get('content-type')
+
+    if (addressContentType && addressContentType.includes('application/json')) {
+      addressData = await addressRes.json()
+    } else {
+      addressData = { message: await addressRes.text() }
+    }
 
     if (!addressRes.ok) {
-      return NextResponse.json({ step: 'address', message: addressData?.message || 'Error al crear dirección' }, { status: addressRes.status })
+      let statusCode = addressRes.status
+
+      if (addressData?.detail?.includes('duplicate key')) {
+        statusCode = 409
+      }
+
+      return NextResponse.json(
+        {
+          step: 'address',
+          error: addressData?.error || 'address_error',
+          message: addressData?.detail || addressData?.message || 'Error al crear dirección'
+        },
+        { status: statusCode }
+      )
     }
 
     return NextResponse.json(
