@@ -90,7 +90,7 @@ export default function PersonasPage() {
       esperar()
 
       const payload = {
-        username: persona.code, 
+        username: persona.code,
         email: persona.email,
         partnerId: persona.id
       }
@@ -103,19 +103,51 @@ export default function PersonasPage() {
 
       const data = await res.json()
 
-      if (!res.ok) {
-        showAlert('error', data?.message || 'Error al crear usuario')
-        throw new Error(data.message || 'Error al crear usuario')
-      }
+      if (!res.ok) throw new Error(data?.message || 'Error al crear usuario')
 
       showAlert('success', 'Usuario creado con éxito')
-      await fetchData() // refrescar tabla
+      await fetchData()
     } catch (error: any) {
       console.error('Error creando usuario:', error)
       setSnackbar({ open: true, message: error.message || 'Error al crear usuario', severity: 'error' })
     } finally {
       finEspera()
     }
+  }
+
+  // Método genérico para actualizar partner
+  const handleActualizarPartner = async (payload: Record<string, any>) => {
+    try {
+      esperar()
+
+      const res = await fetch('/api/personas/actualizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al actualizar partner')
+
+      showAlert('success', 'Partner actualizado con éxito')
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error actualizando partner:', error)
+      setSnackbar({ open: true, message: error.message || 'Error al actualizar partner', severity: 'error' })
+    } finally {
+      finEspera()
+    }
+  }
+
+  // Hacer empleado
+  const handleHacerEmpleado = (persona: Persona) => {
+    handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+  }
+
+  // Hacer proveedor
+  const handleHacerProveedor = (persona: Persona) => {
+    handleActualizarPartner({ partnerId: persona.id, isVendor: true })
   }
 
   const columns = useMemo(
@@ -135,7 +167,6 @@ export default function PersonasPage() {
 
           return (
             <div className="flex gap-2 justify-center">
-              {/* Si NO es cliente → botón Hacer usuario */}
               {!persona.isCustomer && (
                 <Tooltip title="Hacer usuario">
                   <IconButton
@@ -148,16 +179,23 @@ export default function PersonasPage() {
                 </Tooltip>
               )}
 
-              {/* Si ya es cliente */}
               {persona.isCustomer && !persona.isVendor && !persona.isEmployee && (
                 <>
                   <Tooltip title="Hacer empleado">
-                    <IconButton color="success" size="small">
+                    <IconButton
+                      color="success"
+                      size="small"
+                      onClick={() => handleHacerEmpleado(persona)}
+                    >
                       <i className="tabler-user-share" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Hacer proveedor">
-                    <IconButton color="warning" size="small">
+                    <IconButton
+                      color="warning"
+                      size="small"
+                      onClick={() => handleHacerProveedor(persona)}
+                    >
                       <i className="tabler-users-group" />
                     </IconButton>
                   </Tooltip>
