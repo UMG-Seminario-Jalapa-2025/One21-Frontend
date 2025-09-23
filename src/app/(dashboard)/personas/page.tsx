@@ -14,7 +14,6 @@ import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Pagination from '@mui/material/Pagination'
 
-
 // React Table
 import {
   useReactTable,
@@ -27,7 +26,7 @@ import {
 // Styles
 import styles from '@core/styles/table.module.css'
 
-import { useLoading } from "@/components/ui/LoadingModal"
+import { useLoading } from '@/components/ui/LoadingModal'
 
 type Persona = {
   id: number
@@ -51,7 +50,7 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
-   const { esperar, finEspera } = useLoading()
+  const { esperar, finEspera } = useLoading()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,30 +83,52 @@ export default function PersonasPage() {
       columnHelper.display({
         id: 'acciones',
         header: 'Acciones',
-        cell: () => (
-          <div className="flex gap-2 justify-center">
-            <Tooltip title="Hacer empleado">
-              <IconButton color="success" size="small">
-                <i className="tabler-user-share" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Hacer proveedor">
-              <IconButton color="warning" size="small">
-                <i className="tabler-users-group" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Editar">
-              <IconButton color="info" size="small">
-                <i className="tabler-edit" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Eliminar">
-              <IconButton color="error" size="small">
-                <i className="tabler-trash-off" />
-              </IconButton>
-            </Tooltip>
-          </div>
-        )
+        cell: ({ row }) => {
+          const persona = row.original
+
+          return (
+            <div className="flex gap-2 justify-center">
+              {/* Si NO es cliente → solo botón Hacer usuario */}
+              {!persona.isCustomer && (
+                <Tooltip title="Hacer usuario">
+                  <IconButton color="primary" size="small">
+                    <i className="tabler-user-plus" />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              {/* Si ya es cliente */}
+              {persona.isCustomer && !persona.isVendor && !persona.isEmployee && (
+                <>
+                  <Tooltip title="Hacer empleado">
+                    <IconButton color="success" size="small">
+                      <i className="tabler-user-share" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Hacer proveedor">
+                    <IconButton color="warning" size="small">
+                      <i className="tabler-users-group" />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+
+              {/* Editar siempre visible */}
+              <Tooltip title="Editar">
+                <IconButton color="info" size="small">
+                  <i className="tabler-edit" />
+                </IconButton>
+              </Tooltip>
+
+              {/* Eliminar siempre visible */}
+              <Tooltip title="Eliminar">
+                <IconButton color="error" size="small">
+                  <i className="tabler-trash-off" />
+                </IconButton>
+              </Tooltip>
+            </div>
+          )
+        }
       })
     ],
     []
