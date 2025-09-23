@@ -14,6 +14,7 @@ import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Pagination from '@mui/material/Pagination'
 
+
 // React Table
 import {
   useReactTable,
@@ -25,6 +26,8 @@ import {
 
 // Styles
 import styles from '@core/styles/table.module.css'
+
+import { useLoading } from "@/components/ui/LoadingModal"
 
 type Persona = {
   id: number
@@ -48,14 +51,17 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+   const { esperar, finEspera } = useLoading()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        esperar()
         const res = await fetch('/api/personas/obtener')
         const data: Persona[] = await res.json()
 
         setPersonas(data)
+        finEspera()
       } catch (error) {
         console.error('Error cargando personas', error)
       } finally {
