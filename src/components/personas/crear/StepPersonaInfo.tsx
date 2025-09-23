@@ -12,6 +12,7 @@ type StepPersonaInfoProps = {
     apellidos: string
     dpi: string
     telefono: string
+    correo: string
     [key: string]: any
   }
   setFormData: React.Dispatch<
@@ -20,6 +21,7 @@ type StepPersonaInfoProps = {
       apellidos: string
       dpi: string
       telefono: string
+      correo: string
       [key: string]: any
     }>
   >
@@ -67,6 +69,16 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             placeholder="0000 0000"
             value={formData.telefono}
             onChange={e => setFormData({ ...formData, telefono: e.target.value })}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <CustomTextField
+            fullWidth
+            label="Correo"
+            placeholder="ejemplo@correo.com"
+            type="email"
+            value={formData.correo}
+            onChange={e => setFormData({ ...formData, correo: e.target.value })}
           />
         </Grid>
 

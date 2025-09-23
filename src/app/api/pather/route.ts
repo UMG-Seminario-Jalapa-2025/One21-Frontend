@@ -15,10 +15,8 @@ export async function POST(req: NextRequest) {
 
     const token = tokenCookie.value
 
-    console.log('Token desde cookie:', token)
-
     const partnerPayload = {
-      code: body.username,
+      code: '502',
       name: `${body.firstName} ${body.lastName}`,
       tax_id: body.taxId || 'String',
       email: body.email,
@@ -41,6 +39,7 @@ export async function POST(req: NextRequest) {
 
     let partnerData: any
     const partnerContentType = partnerRes.headers.get('content-type')
+
 
     if (partnerContentType && partnerContentType.includes('application/json')) {
       partnerData = await partnerRes.json()

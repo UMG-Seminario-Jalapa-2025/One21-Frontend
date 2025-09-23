@@ -31,6 +31,7 @@ const StepperCrearPersona = () => {
     dpi: '',
     telefono: '',
     calle: '',
+    correo: '',
     numero: '',
     zona: '',
     colonia: '',
