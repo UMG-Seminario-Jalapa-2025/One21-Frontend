@@ -13,7 +13,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Pagination from '@mui/material/Pagination'
-
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
 
 // React Table
 import {
@@ -27,7 +28,12 @@ import {
 // Styles
 import styles from '@core/styles/table.module.css'
 
-import { useLoading } from "@/components/ui/LoadingModal"
+// Custom hook
+import { useLoading } from '@/components/ui/LoadingModal'
+
+import { showAlert } from "@/components/ui/AlertProvider"
+
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 type Persona = {
   id: number
@@ -51,26 +57,137 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
-   const { esperar, finEspera } = useLoading()
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean
+    persona?: Persona
+  }>({ open: false })
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  })
+
+  const { esperar, finEspera } = useLoading()
+
+  const fetchData = async () => {
+    try {
+      esperar()
+      const res = await fetch('/api/personas/obtener')
+      const data: Persona[] = await res.json()
+
+      setPersonas(data)
+      finEspera()
+    } catch (error) {
+      console.error('Error cargando personas', error)
+      finEspera()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        esperar()
-        const res = await fetch('/api/personas/obtener')
-        const data: Persona[] = await res.json()
-
-        setPersonas(data)
-        finEspera()
-      } catch (error) {
-        console.error('Error cargando personas', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchData()
   }, [])
+
+  // Crear usuario desde la fila
+  const handleCrearUsuario = async (persona: Persona) => {
+    try {
+      esperar()
+
+      const payload = {
+        username: persona.code,
+        email: persona.email,
+        partnerId: persona.id
+      }
+
+      const res = await fetch('/api/personas/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al crear usuario')
+
+      showAlert('success', 'Usuario creado con éxito')
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error creando usuario:', error)
+      setSnackbar({ open: true, message: error.message || 'Error al crear usuario', severity: 'error' })
+    } finally {
+      finEspera()
+    }
+  }
+
+  // Método genérico para actualizar partner
+  const handleActualizarPartner = async (payload: Record<string, any>) => {
+    try {
+      esperar()
+
+      const res = await fetch('/api/personas/actualizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al actualizar partner')
+
+      showAlert('success', 'Partner actualizado con éxito')
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error actualizando partner:', error)
+      setSnackbar({ open: true, message: error.message || 'Error al actualizar partner', severity: 'error' })
+    } finally {
+      finEspera()
+    }
+  }
+
+  // Hacer empleado
+  const handleHacerEmpleado = (persona: Persona) => {
+    handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+  }
+
+  // Hacer proveedor
+  const handleHacerProveedor = (persona: Persona) => {
+    handleActualizarPartner({ partnerId: persona.id, isVendor: true })
+  }
+
+  // Eliminar persona
+  const handleEliminar = async (persona: Persona) => {
+    try {
+      esperar()
+
+      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        showAlert('error', data?.message || 'Error al eliminar persona')
+        throw new Error(data.message || 'Error al eliminar persona')
+      }
+
+      showAlert('success', `Persona ${persona.name} eliminada con éxito`)
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error eliminando persona:', error)
+      setSnackbar({
+        open: true,
+        message: error.message || 'Error al eliminar persona',
+        severity: 'error'
+      })
+    } finally {
+      finEspera()
+    }
+  }
+
+
 
   const columns = useMemo(
     () => [
@@ -84,30 +201,60 @@ export default function PersonasPage() {
       columnHelper.display({
         id: 'acciones',
         header: 'Acciones',
-        cell: () => (
-          <div className="flex gap-2 justify-center">
-            <Tooltip title="Hacer empleado">
-              <IconButton color="success" size="small">
-                <i className="tabler-user-share" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Hacer proveedor">
-              <IconButton color="warning" size="small">
-                <i className="tabler-users-group" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Editar">
-              <IconButton color="info" size="small">
-                <i className="tabler-edit" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Eliminar">
-              <IconButton color="error" size="small">
-                <i className="tabler-trash-off" />
-              </IconButton>
-            </Tooltip>
-          </div>
-        )
+        cell: ({ row }) => {
+          const persona = row.original
+
+          return (
+            <div className="flex gap-2 justify-center">
+              {!persona.isCustomer && (
+                <Tooltip title="Hacer usuario">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleCrearUsuario(persona)}
+                  >
+                    <i className="tabler-user-plus" />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              {persona.isCustomer && !persona.isVendor && !persona.isEmployee && (
+                <>
+                  <Tooltip title="Hacer empleado">
+                    <IconButton
+                      color="success"
+                      size="small"
+                      onClick={() => handleHacerEmpleado(persona)}
+                    >
+                      <i className="tabler-user-share" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Hacer proveedor">
+                    <IconButton
+                      color="warning"
+                      size="small"
+                      onClick={() => handleHacerProveedor(persona)}
+                    >
+                      <i className="tabler-users-group" />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+
+              <Tooltip title="Editar">
+                <IconButton color="info" size="small">
+                  <i className="tabler-edit" />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Eliminar">
+                <IconButton color="error" size="small" onClick={() => setConfirmDialog({ open: true, persona })}>
+                  <i className="tabler-trash-off" />
+                </IconButton>
+              </Tooltip>
+            </div>
+          )
+        }
       })
     ],
     []
@@ -148,10 +295,7 @@ export default function PersonasPage() {
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
                       <th key={header.id}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
                   </tr>
@@ -161,12 +305,7 @@ export default function PersonasPage() {
                 {table.getRowModel().rows.map(row => (
                   <tr key={row.id}>
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
+                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}
                   </tr>
                 ))}
@@ -174,7 +313,6 @@ export default function PersonasPage() {
             </table>
           </div>
 
-          {/* Paginación */}
           <div className="flex justify-center py-4">
             <Pagination
               count={table.getPageCount()}
@@ -185,6 +323,37 @@ export default function PersonasPage() {
           </div>
         </Card>
       )}
+
+      {/* Notificación */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title="Confirmar eliminación"
+        message={`¿Seguro que deseas eliminar a "${confirmDialog.persona?.name}"?`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (confirmDialog.persona) {
+            handleEliminar(confirmDialog.persona)
+          }
+
+          setConfirmDialog({ open: false })
+        }}
+        onCancel={() => setConfirmDialog({ open: false })}
+      />
+
     </div>
   )
 }
