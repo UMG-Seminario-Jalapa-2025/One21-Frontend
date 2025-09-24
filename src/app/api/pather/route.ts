@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       tax_id: body.dpi || 'String',
       email: body.correo,
       isActive: true,
-      isCustomer: true,
+      isCustomer: false,
       isVendor: false,
       isEmployee: false,
       notes: body.referencia || null,

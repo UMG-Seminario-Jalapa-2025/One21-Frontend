@@ -60,13 +60,10 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
             <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>
           </SubMenu>
 
-          <SubMenu label='Administración' icon={<i className='tabler-settings' />}>
-            <MenuItem href='/Empleados'>Usuarios</MenuItem>
-            <MenuItem href='/admin/roles'>Roles</MenuItem>
-            <MenuItem href='/admin/suppliers'>Proveedores</MenuItem>
+          <SubMenu label='Configuración' icon={<i className='tabler-settings' />}>
+            <MenuItem href='/countries'>Paises</MenuItem>
           </SubMenu>
         </MenuSection>
-        <MenuItem href='/configuracion' icon={<i className='tabler-settings' />}>Configuración</MenuItem>
       </Menu>
     </ScrollWrapper>
   )
