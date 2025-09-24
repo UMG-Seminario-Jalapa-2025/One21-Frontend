@@ -49,28 +49,15 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='tabler-circle text-xs' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href='/home' icon={<i className='tabler-smart-home' />}>Inicio</MenuItem>
-        <MenuItem href='/dashboard' icon={<i className='tabler-dashboard' />}>Panel de control</MenuItem>
+        <MenuItem href='/inicio' icon={<i className='tabler-smart-home' />}>Inicio</MenuItem>
 
         <MenuSection label='Módulos ERP'>
-          <SubMenu label='Compras' icon={<i className='tabler-shopping-cart' />}>
-            <MenuItem href='/purchases/orders'>Órdenes</MenuItem>
-            <MenuItem href='/purchases/requests'>Solicitudes</MenuItem>
-            <MenuItem href='/purchases/reports'>Reportes</MenuItem>
-          </SubMenu>
 
           <MenuItem href='/Empleados' icon={<i className='tabler-user' />}>Empleados</MenuItem>
-
-          <SubMenu label='Ventas' icon={<i className='tabler-cash-register' />}>
-            <MenuItem href='/sales/invoices'>Facturas</MenuItem>
-            <MenuItem href='/sales/clients'>Clientes</MenuItem>
-            <MenuItem href='/sales/reports'>Reportes</MenuItem>
-          </SubMenu>
+          <MenuItem href='/personas' icon={<i className='tabler-users' />}>Personas</MenuItem>
 
           <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
-            <MenuItem href='/ticket'>Productos</MenuItem>
-            <MenuItem href='/inventory/movements'>Movimientos</MenuItem>
-            <MenuItem href='/inventory/categories'>Categorías</MenuItem>
+            <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>
           </SubMenu>
 
           <SubMenu label='Administración' icon={<i className='tabler-settings' />}>
