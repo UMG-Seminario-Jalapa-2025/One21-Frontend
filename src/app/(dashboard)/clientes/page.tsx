@@ -1,9 +1,9 @@
-import Empleados from '@views/apps/empleados/empleados';
+import Clientes from '@views/apps/clientes/clientes';
 
 export default function ClientesPage() {
   return (
     <div>
-      <Empleados />
+      <Clientes />
     </div>
   );
 }
