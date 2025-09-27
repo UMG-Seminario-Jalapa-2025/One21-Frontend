@@ -37,8 +37,8 @@ type Country = {
   id: number
   code: string
   name: string
-  phone_code: string
-  is_active: boolean
+  phoneCode: string
+  isActive: boolean
 }
 
 const columnHelper = createColumnHelper<Country>()
@@ -61,8 +61,10 @@ export default function CountriesPage() {
     try {
       esperar()
       const res = await fetch('/api/countries/obtener')
+
       const data: Country[] = await res.json()
-      
+
+
       setCountries(data)
     } catch (err) {
       console.error('Error cargando países', err)
@@ -73,7 +75,7 @@ export default function CountriesPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -99,8 +101,8 @@ export default function CountriesPage() {
     () => [
       columnHelper.accessor('code', { header: 'Código' }),
       columnHelper.accessor('name', { header: 'Nombre' }),
-      columnHelper.accessor('phone_code', { header: 'Teléfono' }),
-      columnHelper.accessor('is_active', {
+      columnHelper.accessor('phoneCode', { header: 'Teléfono' }),
+      columnHelper.accessor('isActive', {
         header: 'Activo',
         cell: info => (info.getValue() ? 'Sí' : 'No')
       }),

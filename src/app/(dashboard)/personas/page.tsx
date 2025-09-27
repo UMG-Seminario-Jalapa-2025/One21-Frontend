@@ -89,7 +89,7 @@ export default function PersonasPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
   // Crear usuario desde la fila
   const handleCrearUsuario = async (persona: Persona) => {
@@ -150,6 +150,8 @@ export default function PersonasPage() {
   // Hacer empleado
   const handleHacerEmpleado = (persona: Persona) => {
     handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+
+
   }
 
   // Hacer proveedor
@@ -257,7 +259,7 @@ export default function PersonasPage() {
         }
       })
     ],
-    []
+    [handleCrearUsuario, handleHacerEmpleado, handleHacerProveedor]
   )
 
   const table = useReactTable({

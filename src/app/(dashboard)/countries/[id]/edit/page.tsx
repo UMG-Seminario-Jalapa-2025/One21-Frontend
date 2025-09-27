@@ -23,10 +23,10 @@ export default function EditCountryPage() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    phone_code: '',
-    is_active: true
+    phoneCode: '',
+    isActive: true
   })
-  
+
   const [loading, setLoading] = useState(true)
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
@@ -89,12 +89,12 @@ export default function EditCountryPage() {
               onChange={e => setFormData({ ...formData, code: e.target.value })} />
             <CustomTextField label="Nombre" value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <CustomTextField label="Código telefónico" value={formData.phone_code}
-              onChange={e => setFormData({ ...formData, phone_code: e.target.value })} />
+            <CustomTextField label="Código telefónico" value={formData.phoneCode}
+              onChange={e => setFormData({ ...formData, phoneCode: e.target.value })} />
             <FormControlLabel
               control={
-                <Switch checked={formData.is_active}
-                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })} />
+                <Switch checked={formData.isActive}
+                  onChange={e => setFormData({ ...formData, isActive: e.target.checked })} />
               }
               label="Activo"
             />

@@ -22,7 +22,7 @@ export default function CreateCountryPage() {
     phone_code: '',
     is_active: true
   })
-  
+
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
 
   const router = useRouter()
