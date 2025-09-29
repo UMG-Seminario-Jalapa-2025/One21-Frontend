@@ -1,203 +1,220 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, TextField, Grid, MenuItem, FormControl, InputLabel, Select
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Grid,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material'
 
 export type EmpleadoPayload = {
   employee_number: string
-  business_partner_id: number
-  hire_date: string              // YYYY-MM-DD
-  employee_department_id?: number | null
-  job_position_id?: number | null
+  businessPartner: { id: number }
+  hire_date: string
+  employeeDepartment?: { id: number } | null
+  jobPosition?: { id: number } | null
   position_title?: string | null
-  manager_employee_id?: number | null
+  managerEmployee?: { id: number } | null
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
   base_salary?: number | null
-  currency_code: string          // p.ej. GTQ, USD
+  currency_code: string
   keycloak_user_id?: string | null
 }
 
 type Props = {
   open: boolean
   onClose: () => void
-  // Datos mínimos de la persona seleccionada
   persona?: { id: number; code: string; name: string }
-  // Te regreso el payload listo para enviar a la API
   onSubmit: (payload: EmpleadoPayload) => void
 }
 
 const hoyISO = () => new Date().toISOString().slice(0, 10)
 
-export default function EmpleadoModal({ open, onClose, persona, onSubmit }: Props) {
-  const sugerenciaNumero = useMemo(() => {
-    if (!persona) return ''
-    const year = new Date().getFullYear()
-    return `${persona.code}-${year}-${String(persona.id).padStart(4, '0')}`
-  }, [persona])
-
-  const [form, setForm] = useState<EmpleadoPayload>({
+const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
+  const [formData, setFormData] = useState<EmpleadoPayload>({
     employee_number: '',
-    business_partner_id: persona?.id ?? 0,
+    businessPartner: { id: 0 },
     hire_date: hoyISO(),
-    employee_department_id: null,
-    job_position_id: null,
+    employeeDepartment: null,
+    jobPosition: null,
     position_title: '',
-    manager_employee_id: null,
+    managerEmployee: null,
     status: 'ACTIVE',
     base_salary: undefined,
     currency_code: 'GTQ',
-    keycloak_user_id: ''
+    keycloak_user_id: null
   })
 
-  // Cuando cambia la persona, refrescar defaults
-  useEffect(() => {
-    if (!persona) return
-    setForm(f => ({
-      ...f,
-      business_partner_id: persona.id,
-      employee_number: sugerenciaNumero
-    }))
-  }, [persona, sugerenciaNumero])
+  const [departamentos, setDepartamentos] = useState<any[]>([])
+  const [puestos, setPuestos] = useState<any[]>([])
+  const [jefes, setJefes] = useState<any[]>([]) // aseguramos array
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]:
-        ['employee_department_id','job_position_id','manager_employee_id','base_salary'].includes(name)
-          ? (value === '' ? null : Number(value))
-          : value
-    }))
+  // Actualiza datos obligatorios al recibir persona
+  useEffect(() => {
+    if (persona) {
+      setFormData(prev => ({
+        ...prev,
+        employee_number: persona.code,
+        businessPartner: { id: persona.id }
+      }))
+    }
+  }, [persona])
+
+  useEffect(() => {
+    fetch('/api/empleados/departamentos')
+      .then(res => res.json())
+      .then(data => Array.isArray(data) ? setDepartamentos(data) : setDepartamentos([]))
+
+    fetch('/api/empleados/puestos')
+      .then(res => res.json())
+      .then(data => Array.isArray(data) ? setPuestos(data) : setPuestos([]))
+
+    fetch('/api/empleados/jefes')
+      .then(res => res.json())
+      .then(data => {
+        console.log('🧪 jefes data:', data)
+        setJefes(Array.isArray(data) ? data : []) // 👈 aseguramos array
+      })
+  }, [])
+
+  const handleChange = (field: keyof EmpleadoPayload, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = () => {
-    // Validaciones mínimas
-    if (!form.business_partner_id) return alert('Falta business_partner_id')
-    if (!form.employee_number) return alert('Falta número de empleado')
-    if (!form.hire_date) return alert('Falta fecha de contratación')
+    if (!formData.employee_number || !formData.businessPartner?.id || !formData.hire_date) {
+      alert('Faltan datos obligatorios: Código, Socio o Fecha de contratación')
+      return
+    }
 
-    onSubmit(form)
+    onSubmit(formData)
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Registrar Empleado</DialogTitle>
+    <Dialog open={open} onClose={onClose} fullWidth>
+      <DialogTitle>Registrar nuevo empleado</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} mt={1}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth label="Persona (Partner)"
-              value={`${persona?.name ?? ''}  —  ID: ${persona?.id ?? ''}`}
-              InputProps={{ readOnly: true }}
-            />
+          <Grid item xs={6}>
+            <TextField label='Código del empleado' fullWidth value={formData.employee_number} disabled />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField label='Nombre completo' fullWidth value={persona?.name || ''} disabled />
           </Grid>
 
           <Grid item xs={6}>
             <TextField
-              fullWidth label="Número de empleado *"
-              name="employee_number"
-              value={form.employee_number}
-              onChange={handleChange}
-              placeholder={sugerenciaNumero}
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              fullWidth type="date" label="Fecha de contratación *"
-              name="hire_date" value={form.hire_date}
-              onChange={handleChange}
+              label='Fecha de contratación'
+              fullWidth
+              type='date'
+              value={formData.hire_date}
+              onChange={e => handleChange('hire_date', e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
           <Grid item xs={6}>
-            <TextField
-              fullWidth label="ID Departamento"
-              name="employee_department_id"
-              value={form.employee_department_id ?? ''}
-              onChange={handleChange}
-              placeholder="Ej. 1"
-            />
+            <FormControl fullWidth>
+              <InputLabel>Departamento</InputLabel>
+              <Select
+                value={formData.employeeDepartment?.id || ''}
+                onChange={e => handleChange('employeeDepartment', { id: Number(e.target.value) })}
+                label='Departamento'
+              >
+                {departamentos.map(dep => (
+                  <MenuItem key={dep.id} value={dep.id}>
+                    {dep.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={6}>
+            <FormControl fullWidth>
+              <InputLabel>Puesto</InputLabel>
+              <Select
+                value={formData.jobPosition?.id || ''}
+                onChange={e => handleChange('jobPosition', { id: Number(e.target.value) })}
+                label='Puesto'
+              >
+                {puestos.map(p => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
 
           <Grid item xs={6}>
             <TextField
-              fullWidth label="ID Puesto"
-              name="job_position_id"
-              value={form.job_position_id ?? ''}
-              onChange={handleChange}
-              placeholder="Ej. 3"
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              fullWidth label="Título del puesto"
-              name="position_title"
-              value={form.position_title ?? ''}
-              onChange={handleChange}
-              placeholder="Ej. Desarrollador Full-Stack"
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              fullWidth label="ID Jefe directo"
-              name="manager_employee_id"
-              value={form.manager_employee_id ?? ''}
-              onChange={handleChange}
-              placeholder="Opcional"
+              label='Título del puesto'
+              fullWidth
+              value={formData.position_title || ''}
+              onChange={e => handleChange('position_title', e.target.value)}
             />
           </Grid>
 
           <Grid item xs={6}>
             <FormControl fullWidth>
-              <InputLabel id="status-label">Estado</InputLabel>
+              <InputLabel>Jefe directo</InputLabel>
               <Select
-                labelId="status-label" label="Estado"
-                name="status" value={form.status}
-                onChange={handleChange}
+                value={formData.managerEmployee?.id || ''}
+                onChange={e => {
+                  const value = e.target.value
+                  handleChange('managerEmployee', value ? { id: Number(value) } : null)
+                }}
+                label='Jefe directo'
               >
-                <MenuItem value="ACTIVE">ACTIVE</MenuItem>
-                <MenuItem value="INACTIVE">INACTIVE</MenuItem>
-                <MenuItem value="SUSPENDED">SUSPENDED</MenuItem>
+                <MenuItem value=''>Ninguno</MenuItem>
+                {Array.isArray(jefes) && jefes.map(j => (
+                  <MenuItem key={j.id} value={j.id}>
+                    {j.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
 
-          <Grid item xs={3}>
+          <Grid item xs={6}>
             <TextField
-              fullWidth label="Salario base"
-              name="base_salary"
-              value={form.base_salary ?? ''}
-              onChange={handleChange}
-              placeholder="Ej. 4500"
-              inputMode="decimal"
+              label='Salario base'
+              fullWidth
+              type='number'
+              value={formData.base_salary || ''}
+              onChange={e => handleChange('base_salary', parseFloat(e.target.value))}
             />
           </Grid>
 
-          <Grid item xs={3}>
-            <TextField
-              fullWidth label="Moneda"
-              name="currency_code"
-              value={form.currency_code}
-              onChange={handleChange}
-              placeholder="GTQ"
-              inputProps={{ maxLength: 3 }}
-            />
+          <Grid item xs={6}>
+            <FormControl fullWidth>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={formData.status}
+                onChange={e => handleChange('status', e.target.value as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED')}
+              >
+                <MenuItem value='ACTIVE'>Activo</MenuItem>
+                <MenuItem value='INACTIVE'>Inactivo</MenuItem>
+                <MenuItem value='SUSPENDED'>Suspendido</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={6}>
             <TextField
-              fullWidth label="Keycloak User ID"
-              name="keycloak_user_id"
-              value={form.keycloak_user_id ?? ''}
-              onChange={handleChange}
-              placeholder="Opcional (UUID)"
+              label='Moneda'
+              fullWidth
+              value={formData.currency_code}
+              onChange={e => handleChange('currency_code', e.target.value)}
             />
           </Grid>
         </Grid>
@@ -205,8 +222,12 @@ export default function EmpleadoModal({ open, onClose, persona, onSubmit }: Prop
 
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={handleSubmit}>Guardar</Button>
+        <Button variant='contained' onClick={handleSubmit}>
+          Guardar
+        </Button>
       </DialogActions>
     </Dialog>
   )
 }
+
+export default EmpleadoModal

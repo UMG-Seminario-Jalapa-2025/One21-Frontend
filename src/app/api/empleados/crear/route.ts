@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     // ✅ Verifica que la URL esté definida correctamente
     const EMPLOYEE_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
-    const res = await fetch(`${EMPLOYEE_BASE_URL}/employees/employees`, {
+    const res = await fetch(`${EMPLOYEE_BASE_URL}/employees`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,18 +29,13 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
 
     if (!res.ok) {
-      return NextResponse.json(
-        { message: data?.message || 'Error al crear empleado' },
-        { status: res.status }
-      )
+      return NextResponse.json({ message: data?.message || 'Error al crear empleado' }, { status: res.status })
     }
 
-    return NextResponse.json(
-      { message: 'Empleado creado con éxito', data },
-      { status: 201 }
-    )
+    return NextResponse.json({ message: 'Empleado creado con éxito', data }, { status: 201 })
   } catch (err) {
     console.error('❌ Error en /api/empleados/crear:', err)
+    
     return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 })
   }
 }

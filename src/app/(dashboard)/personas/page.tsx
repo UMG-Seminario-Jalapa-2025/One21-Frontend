@@ -69,24 +69,48 @@ export default function PersonasPage() {
 
   const submitEmpleado = async (payload: EmpleadoPayload) => {
     try {
+      // Validaciones básicas
+      if (!payload.employee_number || !payload.businessPartner?.id || !payload.hire_date) {
+        showAlert('error', 'Faltan datos obligatorios: Código, Socio o Fecha de contratación')
+        
+        return
+      }
+
+      // Payload adaptado al backend (según Swagger)
+      const transformedPayload = {
+        employeeNumber: payload.employee_number,
+        businessPartnerId: payload.businessPartner.id,
+        hireDate: payload.hire_date,
+        employeeDepartment: payload.employeeDepartment?.id ? { id: payload.employeeDepartment.id } : null,
+        jobPosition: payload.jobPosition?.id ? { id: payload.jobPosition.id } : null,
+        positionTitle: payload.position_title || null,
+        managerEmployee: payload.managerEmployee?.id ? { id: payload.managerEmployee.id } : null,
+        status: payload.status,
+        baseSalary: payload.base_salary || 0,
+        currencyCode: payload.currency_code,
+        keycloakUserId: payload.keycloak_user_id || null
+      }
+
+      console.log('🧪 Payload FINAL a enviar:', JSON.stringify(transformedPayload, null, 2))
+
       const res = await fetch('/api/empleados/crear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(transformedPayload)
       })
 
       const data = await res.json()
 
       if (!res.ok) throw new Error(data?.message || 'Error al crear empleado')
 
-      // Ahora actualizamos partner para marcarlo como empleado
-      await handleActualizarPartner({ partnerId: payload.business_partner_id, isEmployee: true })
+      // Actualizar socio de negocio
+      await handleActualizarPartner({ partnerId: payload.businessPartner.id, isEmployee: true })
 
       showAlert('success', 'Empleado creado con éxito')
       setOpenModalEmpleado(false)
       await fetchData()
     } catch (err: any) {
-      console.error('Error creando empleado:', err)
+      console.error('❌ Error creando empleado:', err)
       showAlert('error', err.message || 'Error al crear empleado')
     }
   }

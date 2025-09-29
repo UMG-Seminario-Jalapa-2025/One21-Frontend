@@ -35,22 +35,72 @@ type Empleado = {
   activo: boolean
 }
 
-// helper para columnas
 const columnHelper = createColumnHelper<Empleado>()
 
 export default function EmpleadosPage() {
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('') // 🔎 filtro
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/empleados/obtener')
-        const data: Empleado[] = await res.json()
-        setEmpleados(data)
-      } catch (error) {
-        console.error('Error cargando empleados', error)
+        const res = await fetch('/api/empleados')
+
+        // 🔹 Manejar errores HTTP para evitar que falle json()
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(`Error al obtener empleados: ${res.status} - ${text}`)
+        }
+
+        const empleadosData = await res.json()
+
+        const empleadosNormalizados: Empleado[] = await Promise.all(
+          empleadosData.map(async (emp: any) => {
+            try {
+              const socioRes = await fetch(`/api/pather/obtener/${emp.businessPartnerId}`)
+
+              if (!socioRes.ok) {
+                console.error(`Socio no disponible para ID ${emp.id}`)
+                return {
+                  id: emp.id,
+                  nombre: '—',
+                  email: '—',
+                  telefono: '—',
+                  fecha: emp.hireDate,
+                  activo: emp.status === 'ACTIVE'
+                }
+              }
+
+              const socio = await socioRes.json()
+
+              return {
+                id: emp.id,
+                nombre: socio?.name || '—',
+                email: socio?.email || '—',
+                telefono: socio?.phone || '—',
+                fecha: emp.hireDate,
+                activo: emp.status === 'ACTIVE'
+              }
+            } catch (error) {
+              console.error(`❌ Error al obtener socio para empleado ID ${emp.id}:`, error)
+              return {
+                id: emp.id,
+                nombre: '—',
+                email: '—',
+                telefono: '—',
+                fecha: emp.hireDate,
+                activo: emp.status === 'ACTIVE'
+              }
+            }
+          })
+        )
+
+        setEmpleados(empleadosNormalizados)
+      } catch (error: any) {
+        console.error('❌ Error cargando empleados:', error.message)
+        // Aquí puedes mostrar un alert si quieres
+        // alert('Error cargando empleados')
       } finally {
         setLoading(false)
       }
@@ -60,16 +110,13 @@ export default function EmpleadosPage() {
   }, [])
 
   const toggleActivo = (id: number, value: boolean) => {
-    setEmpleados(prev =>
-      prev.map(e => (e.id === id ? { ...e, activo: value } : e))
-    )
+    setEmpleados(prev => prev.map(e => (e.id === id ? { ...e, activo: value } : e)))
   }
 
   const handleEliminar = (id: number) => {
     setEmpleados(prev => prev.filter(e => e.id !== id))
   }
 
-  // 🔎 aplica filtro
   const empleadosFiltrados = useMemo(() => {
     const q = query.toLowerCase().trim()
     if (!q) return empleados
@@ -106,19 +153,15 @@ export default function EmpleadosPage() {
         id: 'acciones',
         header: 'Acciones',
         cell: info => (
-          <div className="flex gap-2 justify-center">
-            <Tooltip title="Editar">
-              <IconButton color="info" size="small">
-                <i className="tabler-edit" />
+          <div className='flex gap-2 justify-center'>
+            <Tooltip title='Editar'>
+              <IconButton color='info' size='small'>
+                <i className='tabler-edit' />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Eliminar">
-              <IconButton
-                color="error"
-                size="small"
-                onClick={() => handleEliminar(info.row.original.id)}
-              >
-                <i className="tabler-trash-off" />
+            <Tooltip title='Eliminar'>
+              <IconButton color='error' size='small' onClick={() => handleEliminar(info.row.original.id)}>
+                <i className='tabler-trash-off' />
               </IconButton>
             </Tooltip>
           </div>
@@ -129,7 +172,7 @@ export default function EmpleadosPage() {
   )
 
   const table = useReactTable({
-    data: empleadosFiltrados, // 👈 usamos el filtrado
+    data: empleadosFiltrados,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -137,30 +180,30 @@ export default function EmpleadosPage() {
   })
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <Typography variant="h4">Empleados</Typography>
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
+        <Typography variant='h4'>Empleados</Typography>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-40">
+        <div className='flex justify-center items-center h-40'>
           <CircularProgress />
         </div>
       ) : (
         <Card>
           <CardHeader
-            title="Listado de Empleados"
+            title='Listado de Empleados'
             action={
               <TextField
-                size="small"
-                placeholder="Buscar empleado..."
+                size='small'
+                placeholder='Buscar empleado...'
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
             }
           />
 
-          <div className="overflow-x-auto">
+          <div className='overflow-x-auto'>
             <table className={styles.table}>
               <thead>
                 {table.getHeaderGroups().map(headerGroup => (
@@ -187,12 +230,12 @@ export default function EmpleadosPage() {
             </table>
           </div>
 
-          <div className="flex justify-center py-4">
+          <div className='flex justify-center py-4'>
             <Pagination
               count={table.getPageCount()}
               page={table.getState().pagination.pageIndex + 1}
               onChange={(_, page) => table.setPageIndex(page - 1)}
-              color="primary"
+              color='primary'
             />
           </div>
         </Card>
