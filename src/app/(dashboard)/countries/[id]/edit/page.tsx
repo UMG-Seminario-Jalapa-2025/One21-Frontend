@@ -34,7 +34,7 @@ export default function EditCountryPage() {
   useEffect(() => {
     const fetchCountry = async () => {
       try {
-        const res = await fetch(`/api/countries/${id}`)
+        const res = await fetch(`/api/business-partner/countries/${id}`)
 
         if (!res.ok) throw new Error('Error al obtener país')
         const data = await res.json()
@@ -53,9 +53,15 @@ export default function EditCountryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!formData.code.trim() || !formData.name.trim() || !formData.phoneCode.trim()) {
+      setSnackbar({ open: true, message: 'Todos los campos son obligatorios', severity: 'error' })
+
+      return
+    }
+
     try {
 
-      const res = await fetch(`/api/countries/${id}`, {
+      const res = await fetch(`/api/business-partner/countries/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -64,7 +70,7 @@ export default function EditCountryPage() {
       if (!res.ok) throw new Error('Error al actualizar país')
 
       setSnackbar({ open: true, message: 'País actualizado con éxito', severity: 'success' })
-      setTimeout(() => router.push('/countries'), 1500)
+      setTimeout(() => router.push('/countries'), 1000)
     } catch (err) {
       console.error(err)
       setSnackbar({ open: true, message: 'Error al actualizar país', severity: 'error' })

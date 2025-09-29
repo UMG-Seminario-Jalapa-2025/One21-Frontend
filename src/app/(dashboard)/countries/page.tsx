@@ -60,7 +60,7 @@ export default function CountriesPage() {
   const fetchData = async () => {
     try {
       esperar()
-      const res = await fetch('/api/countries/obtener')
+      const res = await fetch('/api/business-partner/countries/obtener')
 
       const data: Country[] = await res.json()
 
@@ -75,14 +75,14 @@ export default function CountriesPage() {
 
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+  }, [])
 
   const handleDelete = async () => {
     if (!deleteId) return
 
     try {
       esperar()
-      const res = await fetch(`/api/countries/${deleteId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/business-partner/countries/${deleteId}`, { method: 'DELETE' })
 
       if (!res.ok) throw new Error('Error al eliminar')
 

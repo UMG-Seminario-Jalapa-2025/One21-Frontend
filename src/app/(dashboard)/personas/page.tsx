@@ -74,7 +74,7 @@ export default function PersonasPage() {
   const fetchData = async () => {
     try {
       esperar()
-      const res = await fetch('/api/personas/obtener')
+      const res = await fetch('/api/business-partner/personas/obtener')
       const data: Persona[] = await res.json()
 
       setPersonas(data)
@@ -102,7 +102,7 @@ export default function PersonasPage() {
         partnerId: persona.id
       }
 
-      const res = await fetch('/api/personas/user', {
+      const res = await fetch('/api/business-partner/personas/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -127,7 +127,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch('/api/personas/actualizar', {
+      const res = await fetch('/api/business-partner/personas/actualizar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -164,7 +164,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+      const res = await fetch(`/api/business-partner/personas/eliminar?id=${persona.id}`, {
         method: 'DELETE'
       })
 

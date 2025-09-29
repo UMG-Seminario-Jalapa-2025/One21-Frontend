@@ -30,9 +30,15 @@ export default function CreateCountryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!formData.code.trim() || !formData.name.trim() || !formData.phone_code.trim()) {
+      setSnackbar({ open: true, message: 'Todos los campos son obligatorios', severity: 'error' })
+
+      return
+    }
+
     try {
 
-      const res = await fetch('/api/countries', {
+      const res = await fetch('/api/business-partner/countries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

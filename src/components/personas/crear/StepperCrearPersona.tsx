@@ -51,7 +51,7 @@ const StepperCrearPersona = () => {
     try {
       esperar()
 
-      const res = await fetch('/api/pather', {
+      const res = await fetch('/api/business-partner/pather', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(personaFormData)
