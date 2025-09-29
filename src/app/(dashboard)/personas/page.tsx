@@ -89,7 +89,7 @@ export default function PersonasPage() {
 
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+  }, [])
 
   // Crear usuario desde la fila
   const handleCrearUsuario = async (persona: Persona) => {
@@ -259,7 +259,7 @@ export default function PersonasPage() {
         }
       })
     ],
-    [handleCrearUsuario, handleHacerEmpleado, handleHacerProveedor]
+    []
   )
 
   const table = useReactTable({
