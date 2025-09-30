@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       postalCode: body.zona,
       isDefault: 1,
       isActive: 1,
-      municipality: { id: 1 },
+      municipality: { id: body.departmentId || 1 },
     }
 
     const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {

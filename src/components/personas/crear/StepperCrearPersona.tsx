@@ -37,7 +37,8 @@ const StepperCrearPersona = () => {
     colonia: '',
     referencia: '',
     ciudad: '',
-    estado: ''
+    estado: '',
+    departmentId: null,
   })
 
   const handleNext = () => setActiveStep(prev => prev + 1)
