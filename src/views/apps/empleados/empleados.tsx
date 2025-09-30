@@ -12,6 +12,12 @@ import IconButton from '@mui/material/IconButton'
 import Pagination from '@mui/material/Pagination'
 import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+import Grid from '@mui/material/Grid'
 
 // React Table
 import {
@@ -33,6 +39,9 @@ type Empleado = {
   telefono: string
   fecha: string
   activo: boolean
+  positionTitle?: string
+  baseSalary?: number
+  currencyCode?: string
 }
 
 const columnHelper = createColumnHelper<Empleado>()
@@ -41,17 +50,14 @@ export default function EmpleadosPage() {
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
+  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null)
+  const [openModal, setOpenModal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/empleados')
-
-        // 🔹 Manejar errores HTTP para evitar que falle json()
-        if (!res.ok) {
-          const text = await res.text()
-          throw new Error(`Error al obtener empleados: ${res.status} - ${text}`)
-        }
+        if (!res.ok) throw new Error(`Error al obtener empleados: ${res.status}`)
 
         const empleadosData = await res.json()
 
@@ -61,7 +67,6 @@ export default function EmpleadosPage() {
               const socioRes = await fetch(`/api/pather/obtener/${emp.businessPartnerId}`)
 
               if (!socioRes.ok) {
-                console.error(`Socio no disponible para ID ${emp.id}`)
                 return {
                   id: emp.id,
                   nombre: '—',
@@ -73,17 +78,18 @@ export default function EmpleadosPage() {
               }
 
               const socio = await socioRes.json()
-
               return {
                 id: emp.id,
                 nombre: socio?.name || '—',
                 email: socio?.email || '—',
                 telefono: socio?.phone || '—',
                 fecha: emp.hireDate,
-                activo: emp.status === 'ACTIVE'
+                activo: emp.status === 'ACTIVE',
+                positionTitle: emp.positionTitle,
+                baseSalary: emp.baseSalary,
+                currencyCode: emp.currencyCode
               }
-            } catch (error) {
-              console.error(`❌ Error al obtener socio para empleado ID ${emp.id}:`, error)
+            } catch {
               return {
                 id: emp.id,
                 nombre: '—',
@@ -99,8 +105,6 @@ export default function EmpleadosPage() {
         setEmpleados(empleadosNormalizados)
       } catch (error: any) {
         console.error('❌ Error cargando empleados:', error.message)
-        // Aquí puedes mostrar un alert si quieres
-        // alert('Error cargando empleados')
       } finally {
         setLoading(false)
       }
@@ -109,12 +113,54 @@ export default function EmpleadosPage() {
     fetchData()
   }, [])
 
-  const toggleActivo = (id: number, value: boolean) => {
-    setEmpleados(prev => prev.map(e => (e.id === id ? { ...e, activo: value } : e)))
+  const toggleActivo = async (id: number, value: boolean) => {
+    try {
+      const nuevoEstado = value ? 'ACTIVE' : 'INACTIVE'
+      const res = await fetch(`/api/empleados/status/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nuevoEstado })
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar estado')
+
+      setEmpleados(prev => prev.map(e => (e.id === id ? { ...e, activo: value } : e)))
+    } catch (err) {
+      console.error('❌ Error al cambiar estado:', err)
+    }
   }
 
   const handleEliminar = (id: number) => {
     setEmpleados(prev => prev.filter(e => e.id !== id))
+  }
+
+  const handleEditar = (empleado: Empleado) => {
+    setSelectedEmpleado(empleado)
+    setOpenModal(true)
+  }
+
+  const handleGuardar = async () => {
+    if (!selectedEmpleado) return
+
+    try {
+      // 🔹 solo enviamos lo laboral
+
+      const res = await fetch(`/api/empleados/${selectedEmpleado.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedEmpleado)
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar empleado')
+
+      const actualizado = await res.json()
+
+      setEmpleados(prev => prev.map(e => (e.id === actualizado.id ? { ...e, ...actualizado } : e)))
+
+      setOpenModal(false)
+    } catch (err) {
+      console.error('❌ Error al guardar cambios:', err)
+    }
   }
 
   const empleadosFiltrados = useMemo(() => {
@@ -122,9 +168,7 @@ export default function EmpleadosPage() {
     if (!q) return empleados
     return empleados.filter(
       e =>
-        e.nombre.toLowerCase().includes(q) ||
-        e.email.toLowerCase().includes(q) ||
-        e.telefono.toLowerCase().includes(q)
+        e.nombre.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.telefono.toLowerCase().includes(q)
     )
   }, [query, empleados])
 
@@ -143,10 +187,7 @@ export default function EmpleadosPage() {
       columnHelper.accessor('activo', {
         header: 'Estado',
         cell: info => (
-          <Switch
-            checked={info.getValue()}
-            onChange={e => toggleActivo(info.row.original.id, e.target.checked)}
-          />
+          <Switch checked={info.getValue()} onChange={e => toggleActivo(info.row.original.id, e.target.checked)} />
         )
       }),
       columnHelper.display({
@@ -155,7 +196,7 @@ export default function EmpleadosPage() {
         cell: info => (
           <div className='flex gap-2 justify-center'>
             <Tooltip title='Editar'>
-              <IconButton color='info' size='small'>
+              <IconButton color='info' size='small' onClick={() => handleEditar(info.row.original)}>
                 <i className='tabler-edit' />
               </IconButton>
             </Tooltip>
@@ -209,9 +250,7 @@ export default function EmpleadosPage() {
                 {table.getHeaderGroups().map(headerGroup => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
-                      <th key={header.id}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
+                      <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                     ))}
                   </tr>
                 ))}
@@ -220,9 +259,7 @@ export default function EmpleadosPage() {
                 {table.getRowModel().rows.map(row => (
                   <tr key={row.id}>
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}
                   </tr>
                 ))}
@@ -240,6 +277,48 @@ export default function EmpleadosPage() {
           </div>
         </Card>
       )}
+
+      {/* Modal de edición */}
+      <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth maxWidth='sm'>
+        <DialogTitle>Editar Empleado</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} className='mt-2'>
+            <Grid item xs={12}>
+              <TextField
+                label='Puesto'
+                fullWidth
+                value={selectedEmpleado?.positionTitle || ''}
+                onChange={e => setSelectedEmpleado(prev => (prev ? { ...prev, positionTitle: e.target.value } : prev))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label='Salario Base'
+                type='number'
+                fullWidth
+                value={selectedEmpleado?.baseSalary || ''}
+                onChange={e =>
+                  setSelectedEmpleado(prev => (prev ? { ...prev, baseSalary: parseFloat(e.target.value) } : prev))
+                }
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label='Moneda'
+                fullWidth
+                value={selectedEmpleado?.currencyCode || ''}
+                onChange={e => setSelectedEmpleado(prev => (prev ? { ...prev, currencyCode: e.target.value } : prev))}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenModal(false)}>Cancelar</Button>
+          <Button onClick={handleGuardar} variant='contained' color='primary'>
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   )
 }

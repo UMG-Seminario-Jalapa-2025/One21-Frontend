@@ -14,6 +14,7 @@ export async function GET() {
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
     console.error('❌ Error en /listar:', err)
+    
     return NextResponse.json({ message: 'Error interno al obtener empleados' }, { status: 500 })
   }
 }
