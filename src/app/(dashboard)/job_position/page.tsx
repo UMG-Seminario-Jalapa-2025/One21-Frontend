@@ -33,7 +33,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 // Custom hook
 import { useLoading } from '@/components/ui/LoadingModal'
 
-// Tipo para puestos
+// Tipo de datos
 type JobPosition = {
   id: number
   code: string
@@ -58,17 +58,30 @@ export default function JobPositionsPage() {
 
   const { esperar, finEspera } = useLoading()
 
-  // Solo placeholder de carga por ahora (luego se conecta con API)
+  // 🔹 Obtener puestos desde API real
   const fetchData = async () => {
     try {
       esperar()
-      // 🔹 temporal: simulamos datos
-      const data: JobPosition[] = [
-        { id: 1, code: '1', name: 'Técnico', description: 'Soporte', isActive: true }
-      ]
-      setPositions(data)
+
+      const res = await fetch('/api/employee_positions/obtener')
+
+      if (!res.ok) throw new Error('Error al obtener puestos')
+
+      const data = await res.json()
+
+      // Mapeo al formato del frontend
+      const mappedData: JobPosition[] = data.map((d: any) => ({
+        id: d.id,
+        code: d.code,
+        name: d.name,
+        description: d.description,
+        isActive: d.is_active === true || d.is_active === 1 || d.isActive === true || d.isActive === 1
+      }))
+
+      setPositions(mappedData)
     } catch (err) {
-      console.error('Error cargando puestos', err)
+      console.error('❌ Error cargando puestos:', err)
+      setSnackbar({ open: true, message: 'Error al cargar puestos', severity: 'error' })
     } finally {
       finEspera()
     }
@@ -78,16 +91,20 @@ export default function JobPositionsPage() {
     fetchData()
   }, [])
 
+  // 🔹 Eliminar puesto
   const handleDelete = async () => {
     if (!deleteId) return
 
     try {
       esperar()
-      // 🔹 placeholder (luego se conecta con DELETE)
+      const res = await fetch(`/api/employee_positions/${deleteId}`, { method: 'DELETE' })
+
+      if (!res.ok) throw new Error('Error al eliminar puesto')
+
       setSnackbar({ open: true, message: 'Puesto eliminado con éxito', severity: 'success' })
-      setPositions(prev => prev.filter(p => p.id !== deleteId))
+      fetchData()
     } catch (err) {
-      console.error(err)
+      console.error('❌ Error al eliminar puesto:', err)
       setSnackbar({ open: true, message: 'Error al eliminar puesto', severity: 'error' })
     } finally {
       finEspera()
@@ -111,24 +128,25 @@ export default function JobPositionsPage() {
           const position = row.original
 
           return (
-            <div className="flex gap-2 justify-center">
-              <Tooltip title="Editar">
+            <div className='flex gap-2 justify-center'>
+              <Tooltip title='Editar'>
                 <Link href={`/job_position/${position.id}/edit`}>
-                  <IconButton color="info" size="small">
-                    <i className="tabler-edit" />
+                  <IconButton color='info' size='small'>
+                    <i className='tabler-edit' />
                   </IconButton>
                 </Link>
               </Tooltip>
-              <Tooltip title="Eliminar">
+
+              <Tooltip title='Eliminar'>
                 <IconButton
-                  color="error"
-                  size="small"
+                  color='error'
+                  size='small'
                   onClick={() => {
                     setDeleteId(position.id)
                     setConfirmOpen(true)
                   }}
                 >
-                  <i className="tabler-trash-off" />
+                  <i className='tabler-trash-off' />
                 </IconButton>
               </Tooltip>
             </div>
@@ -144,33 +162,29 @@ export default function JobPositionsPage() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: { pageSize: 5 }
-    }
+    initialState: { pagination: { pageSize: 5 } }
   })
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <Typography variant="h4">Puestos de Trabajo</Typography>
-        <Link href="/job_position/create">
-          <Button variant="contained" color="primary">
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
+        <Typography variant='h4'>Puestos de Trabajo</Typography>
+        <Link href='/job_position/create'>
+          <Button variant='contained' color='primary'>
             Crear Puesto
           </Button>
         </Link>
       </div>
 
       <Card>
-        <CardHeader title="Catálogo de Puestos" />
-        <div className="overflow-x-auto">
+        <CardHeader title='Catálogo de Puestos' />
+        <div className='overflow-x-auto'>
           <table className={styles.table}>
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
-                    <th key={header.id}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
+                    <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                   ))}
                 </tr>
               ))}
@@ -187,12 +201,12 @@ export default function JobPositionsPage() {
           </table>
         </div>
 
-        <div className="flex justify-center py-4">
+        <div className='flex justify-center py-4'>
           <Pagination
             count={table.getPageCount()}
             page={table.getState().pagination.pageIndex + 1}
             onChange={(_, page) => table.setPageIndex(page - 1)}
-            color="primary"
+            color='primary'
           />
         </div>
       </Card>
@@ -200,17 +214,13 @@ export default function JobPositionsPage() {
       {/* Confirm dialog */}
       <ConfirmDialog
         open={confirmOpen}
-        message="¿Seguro que deseas eliminar este puesto?"
+        message='¿Seguro que deseas eliminar este puesto?'
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
 
       {/* Notificación */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </div>

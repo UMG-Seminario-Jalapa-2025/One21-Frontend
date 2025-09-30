@@ -23,7 +23,12 @@ export default function CreateJobPositionPage() {
     is_active: true
   })
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
+
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,25 +41,37 @@ export default function CreateJobPositionPage() {
     }
 
     try {
-      const res = await fetch('/api/job_positions', {
+      // ✅ Adaptamos el payload a lo que espera el backend
+      const payload = {
+        code: formData.code,
+        name: formData.name,
+        description: formData.description,
+        isActive: formData.is_active ? 1 : 0 // el backend usa "isActive"
+      }
+
+      const res = await fetch('/api/employee_positions/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) throw new Error('Error al crear puesto')
 
       setSnackbar({ open: true, message: 'Puesto creado con éxito', severity: 'success' })
+
       setTimeout(() => router.push('/job_position'), 1500)
     } catch (err) {
-      console.error(err)
+      console.error('❌ Error al crear puesto:', err)
       setSnackbar({ open: true, message: 'Error al crear puesto', severity: 'error' })
     }
   }
 
   return (
     <div className="p-6">
-      <Typography variant="h4" gutterBottom>Crear Puesto</Typography>
+      <Typography variant="h4" gutterBottom>
+        Crear Puesto
+      </Typography>
+
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -63,16 +80,19 @@ export default function CreateJobPositionPage() {
               value={formData.code}
               onChange={e => setFormData({ ...formData, code: e.target.value })}
             />
+
             <CustomTextField
               label="Nombre"
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
             />
+
             <CustomTextField
               label="Descripción"
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
             />
+
             <FormControlLabel
               control={
                 <Switch
@@ -82,9 +102,15 @@ export default function CreateJobPositionPage() {
               }
               label="Activo"
             />
+
             <div className="flex justify-end gap-2">
-              <Button onClick={() => router.push('/job_position')} variant="outlined" color="error">Cancelar</Button>
-              <Button type="submit" variant="contained" color="primary">Guardar</Button>
+              <Button onClick={() => router.push('/job_position')} variant="outlined" color="error">
+                Cancelar
+              </Button>
+
+              <Button type="submit" variant="contained" color="primary">
+                Guardar
+              </Button>
             </div>
           </form>
         </CardContent>
