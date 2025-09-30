@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Record<string, string> }
-) {
+
+type RouteContext = {
+  params: {
+    id: string
+  }
+}
+
+export async function PUT(req: NextRequest, context: RouteContext) {
   try {
+    const { id } = context.params
+
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
@@ -26,7 +32,7 @@ export async function PUT(
     const token = tokenCookie.value
     const body = await req.json()
 
-    const res = await fetch(`${baseUrl}/employees/${params.id}`, {
+    const res = await fetch(`${baseUrl}/employees/${id}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -49,7 +55,7 @@ export async function PUT(
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
     console.error('❌ Error en /api/empleados/[id]/edit:', err)
-    
+
     return NextResponse.json(
       { message: 'Error interno al actualizar empleado' },
       { status: 500 }
