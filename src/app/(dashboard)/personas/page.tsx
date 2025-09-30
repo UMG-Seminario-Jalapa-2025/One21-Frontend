@@ -25,7 +25,8 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
-import EmpleadoModal, { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
+import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
 
 // Styles
 import styles from '@core/styles/table.module.css'

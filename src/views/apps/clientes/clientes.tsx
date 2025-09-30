@@ -59,6 +59,7 @@ export default function ClientesPage() {
 
         // ✅ filtra SOLO clientes con rol CUSTOMER
         const soloCustomers = data.filter(c => c.rol === 'CUSTOMER')
+
         setClientes(soloCustomers)
       } catch (error) {
         console.error('Error cargando clientes', error)
@@ -73,7 +74,9 @@ export default function ClientesPage() {
   // 🔎 filtro por búsqueda
   const clientesFiltrados = useMemo(() => {
     const q = query.toLowerCase().trim()
+
     if (!q) return clientes
+    
     return clientes.filter(
       c =>
         c.code.toLowerCase().includes(q) ||

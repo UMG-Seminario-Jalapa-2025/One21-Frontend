@@ -7,7 +7,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const EMPLOYEE_BASE_URL =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091';
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const tokenCookie = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token');
 
     if (!tokenCookie?.value) {
@@ -28,7 +28,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (!res.ok) {
       const msg = await res.text();
+
       console.error(`❌ Backend devolvió error: ${res.status} - ${msg}`);
+
       return NextResponse.json(
         { message: msg || 'Error al actualizar status' },
         { status: res.status }
@@ -36,9 +38,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const data = await res.json();
+
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
     console.error('❌ Error en /api/empleados/status/[id]:', err);
+
     return NextResponse.json({ message: 'Error interno al actualizar status' }, { status: 500 });
   }
 }

@@ -19,7 +19,7 @@ export async function PUT(
     const token = tokenCookie.value
     const body = await req.json()
 
-    
+
     const res = await fetch(`${baseUrl}/employees/${params.id}`, {
       method: 'PUT',
       headers: {
@@ -31,6 +31,7 @@ export async function PUT(
 
     if (!res.ok) {
       const msg = await res.text()
+
       return NextResponse.json(
         { message: msg || 'Error al actualizar empleado' },
         { status: res.status }
@@ -38,9 +39,11 @@ export async function PUT(
     }
 
     const data = await res.json()
+
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
     console.error('❌ Error en /api/empleados/[id]:', err)
+    
     return NextResponse.json(
       { message: 'Error interno al actualizar empleado' },
       { status: 500 }
