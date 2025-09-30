@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
 export async function PUT(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Record<string, string> }
 ) {
-  const { params } = context
-
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
     const cookieStore = cookies()
-    
+
     const tokenCookie = cookieStore.get(
       process.env.AUTH_COOKIE_NAME || 'one21_token'
     )
@@ -50,7 +49,7 @@ export async function PUT(
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
     console.error('❌ Error en /api/empleados/[id]/edit:', err)
-
+    
     return NextResponse.json(
       { message: 'Error interno al actualizar empleado' },
       { status: 500 }
