@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { useParams, useRouter } from 'next/navigation'
 
+// MUI
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -14,6 +15,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 
+// Componentes personalizados
 import CustomTextField from '@core/components/mui/TextField'
 
 export default function EditDepartmentPage() {
@@ -23,24 +25,36 @@ export default function EditDepartmentPage() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    is_active: true
+    isActive: true
   })
 
   const [loading, setLoading] = useState(true)
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
+
+  // 🔹 Obtener datos del departamento
   useEffect(() => {
     const fetchDepartment = async () => {
       try {
-        const res = await fetch(`/api/departamentos/${id}`)
+        const res = await fetch(`/api/employee_departments/${id}`)
 
         if (!res.ok) throw new Error('Error al obtener departamento')
 
         const data = await res.json()
 
-        setFormData(data)
+        // ✅ Mapeo robusto para isActive / is_active
+        setFormData({
+          code: data.code || '',
+          name: data.name || '',
+          isActive: data.isActive ?? data.is_active === 1 ?? false
+        })
       } catch (err) {
-        console.error(err)
+        console.error('❌ Error cargando departamento:', err)
+        setSnackbar({ open: true, message: 'Error al cargar datos', severity: 'error' })
       } finally {
         setLoading(false)
       }
@@ -49,6 +63,7 @@ export default function EditDepartmentPage() {
     if (id) fetchDepartment()
   }, [id])
 
+  // 🔹 Actualizar departamento
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -59,18 +74,27 @@ export default function EditDepartmentPage() {
     }
 
     try {
-      const res = await fetch(`/api/departamentos/${id}`, {
+      // ✅ Aseguramos formato compatible con backend (isActive)
+      const payload = {
+        id: Number(id),
+        code: formData.code,
+        name: formData.name,
+        isActive: formData.isActive
+      }
+
+      const res = await fetch(`/api/employee_departments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) throw new Error('Error al actualizar departamento')
 
       setSnackbar({ open: true, message: 'Departamento actualizado con éxito', severity: 'success' })
-      setTimeout(() => router.push('/employee_departaments'), 1000)
+
+      setTimeout(() => router.push('/employee_departaments'), 1200)
     } catch (err) {
-      console.error(err)
+      console.error('❌ Error actualizando departamento:', err)
       setSnackbar({ open: true, message: 'Error al actualizar departamento', severity: 'error' })
     }
   }
@@ -85,7 +109,10 @@ export default function EditDepartmentPage() {
 
   return (
     <div className="p-6">
-      <Typography variant="h4" gutterBottom>Editar Departamento</Typography>
+      <Typography variant="h4" gutterBottom>
+        Editar Departamento
+      </Typography>
+
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -94,20 +121,23 @@ export default function EditDepartmentPage() {
               value={formData.code}
               onChange={e => setFormData({ ...formData, code: e.target.value })}
             />
+
             <CustomTextField
               label="Nombre"
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
             />
+
             <FormControlLabel
               control={
                 <Switch
-                  checked={formData.is_active}
-                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                  checked={formData.isActive}
+                  onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                 />
               }
               label="Activo"
             />
+
             <div className="flex justify-end gap-2">
               <Button onClick={() => router.push('/employee_departaments')} variant="outlined" color="error">
                 Cancelar

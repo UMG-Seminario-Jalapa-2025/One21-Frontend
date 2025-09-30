@@ -12,26 +12,29 @@ export async function GET() {
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}employees/departments`, {
+    const res = await fetch(`${baseUrl}/employees/departments`, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     })
 
     if (!res.ok) {
+      const errorText = await res.text()
+
       return NextResponse.json(
-        { step: 'department_get', message: 'Error al obtener departamentos' },
+        { step: 'department_get', message: 'Error al obtener departamentos', backend: errorText },
         { status: res.status }
       )
     }
 
     const data = await res.json()
 
-    console.log("👉 Backend devolvió:", data) // Debug
-
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    console.error('❌ Error en /api/empleados/departamentos/obtener:', err)
-    
+    console.error('❌ Error en /api/employee_departments/obtener:', err)
+
     return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
 }

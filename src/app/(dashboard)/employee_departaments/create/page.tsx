@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
+// MUI
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -13,13 +14,14 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 
+// Custom components
 import CustomTextField from '@core/components/mui/TextField'
 
 export default function CreateDepartmentPage() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    is_active: true
+    isActive: true
   })
 
   const [snackbar, setSnackbar] = useState({
@@ -35,20 +37,19 @@ export default function CreateDepartmentPage() {
 
     if (!formData.code.trim() || !formData.name.trim()) {
       setSnackbar({ open: true, message: 'Todos los campos son obligatorios', severity: 'error' })
-      
+
       return
     }
 
     try {
-      // 🔹 Adaptamos el payload a lo que espera el backend
+      // ✅ Payload en formato que espera el backend
       const payload = {
         code: formData.code,
         name: formData.name,
-        isActive:
-          formData.is_active === true || formData.is_active === 1 ? 1 : 0
+        isActive: formData.isActive
       }
 
-      const res = await fetch('/api/departamentos', {
+      const res = await fetch('/api/employee_departments/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -74,43 +75,41 @@ export default function CreateDepartmentPage() {
   }
 
   return (
-    <div className="p-6">
-      <Typography variant="h4" gutterBottom>
+    <div className='p-6'>
+      <Typography variant='h4' gutterBottom>
         Crear Departamento
       </Typography>
+
       <Card>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
             <CustomTextField
-              label="Código"
+              label='Código'
               value={formData.code}
               onChange={e => setFormData({ ...formData, code: e.target.value })}
             />
+
             <CustomTextField
-              label="Nombre"
+              label='Nombre'
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
             />
+
             <FormControlLabel
               control={
                 <Switch
-                  checked={formData.is_active}
-                  onChange={e =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
+                  checked={formData.isActive}
+                  onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                 />
               }
-              label="Activo"
+              label='Activo'
             />
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => router.push('/employee_departaments')}
-                variant="outlined"
-                color="error"
-              >
+
+            <div className='flex justify-end gap-2'>
+              <Button onClick={() => router.push('/employee_departaments')} variant='outlined' color='error'>
                 Cancelar
               </Button>
-              <Button type="submit" variant="contained" color="primary">
+              <Button type='submit' variant='contained' color='primary'>
                 Guardar
               </Button>
             </div>
@@ -118,11 +117,7 @@ export default function CreateDepartmentPage() {
         </CardContent>
       </Card>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
