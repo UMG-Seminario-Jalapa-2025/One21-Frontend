@@ -96,12 +96,15 @@ const StepPersonaDireccion = ({
   // filtrar departamentos por país
   const filteredDepartments = useMemo(() => {
     if (!formData.countryId) return []
-    
+
     return departments.filter(d => d.country?.id === formData.countryId)
   }, [departments, formData.countryId])
 
   // filtrar municipios por departamento
   const filteredMunicipalities = useMemo(() => {
+
+    console.log(formData.departmentId)
+
     if (!formData.departmentId) return []
 
     return municipalities.filter(m => Number(m.department?.id) === Number(formData.departmentId))
@@ -230,24 +233,6 @@ const StepPersonaDireccion = ({
             placeholder="Ej. Frente a un parque"
             value={formData.referencia}
             onChange={e => setFormData({ ...formData, referencia: e.target.value })}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <CustomTextField
-            fullWidth
-            label="Ciudad"
-            placeholder="Ej. Guatemala"
-            value={formData.ciudad}
-            onChange={e => setFormData({ ...formData, ciudad: e.target.value })}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <CustomTextField
-            fullWidth
-            label="Departamento / Estado"
-            placeholder="Ej. Jalapa"
-            value={formData.estado}
-            onChange={e => setFormData({ ...formData, estado: e.target.value })}
           />
         </Grid>
 
