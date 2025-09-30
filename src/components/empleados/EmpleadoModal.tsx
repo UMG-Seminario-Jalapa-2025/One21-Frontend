@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import {
   Dialog,
   DialogTitle,
@@ -92,6 +93,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
   const handleSubmit = () => {
     if (!formData.employee_number || !formData.businessPartner?.id || !formData.hire_date) {
       alert('Faltan datos obligatorios: Código, Socio o Fecha de contratación')
+
       return
     }
 
@@ -171,6 +173,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
                 value={formData.managerEmployee?.id || ''}
                 onChange={e => {
                   const value = e.target.value
+
                   handleChange('managerEmployee', value ? { id: Number(value) } : null)
                 }}
                 label='Jefe directo'

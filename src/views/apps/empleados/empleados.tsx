@@ -57,6 +57,7 @@ export default function EmpleadosPage() {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/empleados')
+
         if (!res.ok) throw new Error(`Error al obtener empleados: ${res.status}`)
 
         const empleadosData = await res.json()
@@ -78,6 +79,7 @@ export default function EmpleadosPage() {
               }
 
               const socio = await socioRes.json()
+
               return {
                 id: emp.id,
                 nombre: socio?.name || '—',
@@ -116,6 +118,7 @@ export default function EmpleadosPage() {
   const toggleActivo = async (id: number, value: boolean) => {
     try {
       const nuevoEstado = value ? 'ACTIVE' : 'INACTIVE'
+
       const res = await fetch(`/api/empleados/status/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -165,7 +168,9 @@ export default function EmpleadosPage() {
 
   const empleadosFiltrados = useMemo(() => {
     const q = query.toLowerCase().trim()
+
     if (!q) return empleados
+
     return empleados.filter(
       e =>
         e.nombre.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.telefono.toLowerCase().includes(q)
@@ -181,6 +186,7 @@ export default function EmpleadosPage() {
         header: 'Fecha',
         cell: info => {
           const d = new Date(info.getValue())
+          
           return isNaN(+d) ? info.getValue() : d.toLocaleDateString()
         }
       }),

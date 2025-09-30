@@ -9,7 +9,7 @@ export async function PUT(
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
-    const cookieStore = await cookies() // 👈 ahora con await
+    const cookieStore = await cookies()
     const tokenCookie = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
 
     if (!tokenCookie?.value) {
@@ -19,7 +19,7 @@ export async function PUT(
     const token = tokenCookie.value
     const body = await req.json()
 
-    // 👇 corregí la URL (sin doble /)
+    
     const res = await fetch(`${baseUrl}/employees/${params.id}`, {
       method: 'PUT',
       headers: {

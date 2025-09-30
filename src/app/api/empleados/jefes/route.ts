@@ -11,6 +11,7 @@ export async function GET() {
     return NextResponse.json(data)
   } catch (err) {
     console.error('Error al obtener jefes:', err)
+    
     return NextResponse.json({ message: 'Error al obtener jefes' }, { status: 500 })
   }
 }
