@@ -189,6 +189,10 @@ export default function PersonasPage() {
     }
   }
 
+  const handleEditarPersona = (persona: Persona) => {
+    window.location.href = `/personas/editar/${persona.id}`
+  }
+
 
 
   const columns = useMemo(
@@ -244,7 +248,7 @@ export default function PersonasPage() {
               )}
 
               <Tooltip title="Editar">
-                <IconButton color="info" size="small">
+                <IconButton color="info" size="small" onClick={() => handleEditarPersona(persona)}>
                   <i className="tabler-edit" />
                 </IconButton>
               </Tooltip>
