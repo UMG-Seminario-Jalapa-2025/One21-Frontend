@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     // Validate priority data
     const validationError = validatePriorityData(body)
-    
+
     if (validationError) {
       return validationError
     }
