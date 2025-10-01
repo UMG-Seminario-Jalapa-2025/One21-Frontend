@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
     const { id } = context.params
@@ -45,7 +45,7 @@ export async function GET(
     return new Response(JSON.stringify(socio), { status: 200 })
   } catch (err) {
     console.error('❌ Error en /api/pather/obtener/[id]:', err)
-    
+
     return new Response(
       JSON.stringify({ message: 'Error interno del servidor' }),
       { status: 500 }

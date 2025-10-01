@@ -8,7 +8,7 @@ export async function PUT(req: Request, { params }: any) {
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
 
     const tokenCookie = cookieStore.get(
       process.env.AUTH_COOKIE_NAME || 'one21_token'
@@ -47,7 +47,7 @@ export async function PUT(req: Request, { params }: any) {
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
     console.error('❌ Error en /api/empleados/[id]/edit:', err)
-    
+
     return NextResponse.json(
       { message: 'Error interno al actualizar empleado' },
       { status: 500 }

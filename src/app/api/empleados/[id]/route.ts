@@ -8,7 +8,7 @@ export async function PATCH(req: Request, context: any) {
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const tokenCookie = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
 
     if (!tokenCookie?.value) {
@@ -29,7 +29,7 @@ export async function PATCH(req: Request, context: any) {
 
     if (!res.ok) {
       const msg = await res.text()
-      
+
       return NextResponse.json(
         { message: msg || 'Error al actualizar estado del empleado' },
         { status: res.status }
