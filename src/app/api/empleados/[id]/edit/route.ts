@@ -2,22 +2,18 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
-
-type RouteContext = {
-  params: {
-    id: string
-  }
-}
-
-export async function PUT(req: NextRequest, context: RouteContext) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } } // 👈 esta forma sí es aceptada
+) {
   try {
-    const { id } = context.params
+    const id = params.id
 
     const baseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
     const cookieStore = cookies()
-
+    
     const tokenCookie = cookieStore.get(
       process.env.AUTH_COOKIE_NAME || 'one21_token'
     )
