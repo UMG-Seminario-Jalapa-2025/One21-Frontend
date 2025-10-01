@@ -1,8 +1,14 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 
-import Modal from './Modal'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+import DialogContentText from '@mui/material/DialogContentText'
+import CircularProgress from '@mui/material/CircularProgress'
 
 export default function ConfirmDialog({
   open,
@@ -18,38 +24,47 @@ export default function ConfirmDialog({
   message: React.ReactNode
   confirmText?: string
   cancelText?: string
-  onConfirm: () => void
+  onConfirm: () => void | Promise<void>
   onCancel: () => void
 }) {
+  const [loading, setLoading] = useState(false)
+
+  const handleConfirm = async () => {
+    setLoading(true)
+    try {
+      await onConfirm()
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
-    <Modal open={open} title={title} onClose={onCancel}>
-      <div className="flex flex-col items-center gap-4">
-        {/* Icono estilo “X” */}
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-          <span className="text-2xl text-red-600">✕</span>
-        </div>
-
-        <p className="text-center text-sm text-gray-700">{message}</p>
-
-        <div className="mt-2 flex w-full justify-end gap-2">
-          <button
-            type="button"
-            className="rounded bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
-            onClick={onCancel}
-            autoFocus
-          >
-            {cancelText}
-          </button>
-          <button
-            type="button"
-            className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-            onClick={onConfirm}
-          >
-            {/* pequeño ícono de basura opcional */}
-            <span className="mr-1">🗑️</span>{confirmText}
-          </button>
-        </div>
-      </div>
-    </Modal>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onCancel}
+      maxWidth="xs"
+      fullWidth
+    >
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          {message}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel} color="inherit" disabled={loading}>
+          {cancelText}
+        </Button>
+        <Button
+          onClick={handleConfirm}
+          color="error"
+          variant="contained"
+          autoFocus
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+        >
+          {loading ? 'Eliminando...' : confirmText}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

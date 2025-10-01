@@ -62,6 +62,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
 
           <SubMenu label='Configuración' icon={<i className='tabler-settings' />}>
             <MenuItem href='/countries'>Paises</MenuItem>
+            <MenuItem href='/roles'>Roles</MenuItem>
           </SubMenu>
         </MenuSection>
       </Menu>
