@@ -34,13 +34,13 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-            className: 'bs-full overflow-y-auto overflow-x-hidden',
-            onScroll: container => scrollMenu(container, false)
-          }
+          className: 'bs-full overflow-y-auto overflow-x-hidden',
+          onScroll: container => scrollMenu(container, false)
+        }
         : {
-            options: { wheelPropagation: false, suppressScrollX: true },
-            onScrollY: container => scrollMenu(container, true)
-          })}
+          options: { wheelPropagation: false, suppressScrollX: true },
+          onScrollY: container => scrollMenu(container, true)
+        })}
     >
       <Menu
         popoutMenuOffset={{ mainAxis: 23 }}
@@ -58,6 +58,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
 
           <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
             <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>
+            <MenuItem href='/prioridades'>Prioridades</MenuItem>
           </SubMenu>
 
           <SubMenu label='Configuración' icon={<i className='tabler-settings' />}>
