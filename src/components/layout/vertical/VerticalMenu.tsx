@@ -70,6 +70,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           </SubMenu>
 
           <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
+            <MenuItem href='/ticket/crear'>Crear Ticket</MenuItem>
             <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>
           </SubMenu>
 
