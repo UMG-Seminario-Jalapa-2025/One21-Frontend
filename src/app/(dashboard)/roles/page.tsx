@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+
 import Link from 'next/link'
 
 // MUI
@@ -25,15 +26,20 @@ import {
 } from '@tanstack/react-table'
 
 // Styles
-import styles from '@core/styles/table.module.css'
+import Grid from '@mui/material/Grid2'
 
-import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
+
 import DialogActions from '@mui/material/DialogActions'
+
 import CustomTextField from '@core/components/mui/TextField'
-import Grid from '@mui/material/Grid2'
+import styles from '@core/styles/table.module.css'
+
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+
+
 
 type Role = {
   id: string
@@ -117,6 +123,7 @@ export default function RolesPage() {
         message: 'El nombre del rol es requerido',
         severity: 'error'
       })
+
       return
     }
 
@@ -384,6 +391,7 @@ export default function RolesPage() {
           if (confirmDialog.role) {
             await handleEliminar(confirmDialog.role)
           }
+
           setConfirmDialog({ open: false })
         }}
         onCancel={() => setConfirmDialog({ open: false })}

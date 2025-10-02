@@ -4,25 +4,25 @@ import type { NextRequest } from 'next/server'
 // Helper function to parse response data
 async function parseResponse(response: Response) {
   const contentType = response.headers.get('content-type')
-  
+
   if (contentType?.includes('application/json')) {
     return await response.json()
   }
-  
+
   return { message: await response.text() }
 }
 
 // Helper function to validate token from cookies
 function getTokenFromCookies(req: NextRequest) {
   const token = req.cookies.get('one21_token')?.value
-  
+
   if (!token) {
     return NextResponse.json(
       { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
       { status: 401 }
     )
   }
-  
+
   return token
 }
 
@@ -68,11 +68,11 @@ function getRoleNameFromQuery(req: NextRequest) {
 // Helper function to prepare role data from request body
 function prepareRoleData(body: any) {
   const roleData: any = {}
-  
+
   if (body.newName) {
     roleData.newName = body.newName
   }
-  
+
   if (body.description !== undefined) {
     roleData.description = body.description
   }
@@ -88,6 +88,7 @@ function validateRoleData(roleData: any) {
       { status: 400 }
     )
   }
+
   return null
 }
 
@@ -97,16 +98,20 @@ export async function PUT(req: NextRequest) {
 
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
+
     if (tokenResult instanceof NextResponse) {
       return tokenResult
     }
+
     const token = tokenResult
 
     // Get role name from query params
     const roleNameResult = getRoleNameFromQuery(req)
+
     if (roleNameResult instanceof NextResponse) {
       return roleNameResult
     }
+
     const roleName = roleNameResult
 
     // Get request body and prepare role data
@@ -115,6 +120,7 @@ export async function PUT(req: NextRequest) {
 
     // Validate role data
     const validationError = validateRoleData(roleData)
+    
     if (validationError) {
       return validationError
     }

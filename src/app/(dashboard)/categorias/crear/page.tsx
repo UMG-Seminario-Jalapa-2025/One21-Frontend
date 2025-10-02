@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Card from '@mui/material/Card'
@@ -18,6 +19,7 @@ import CustomTextField from '@core/components/mui/TextField'
 export default function CrearCategoriaPage() {
     const router = useRouter()
     const [submitting, setSubmitting] = useState(false)
+
     const [formData, setFormData] = useState({
         code: '',
         name: '',
@@ -47,6 +49,7 @@ export default function CrearCategoriaPage() {
                 message: 'El código es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -56,6 +59,7 @@ export default function CrearCategoriaPage() {
                 message: 'El nombre es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -65,6 +69,7 @@ export default function CrearCategoriaPage() {
                 message: 'La descripción es requerida',
                 severity: 'error'
             })
+            
             return
         }
 

@@ -4,25 +4,25 @@ import type { NextRequest } from 'next/server'
 // Helper function to parse response data
 async function parseResponse(response: Response) {
   const contentType = response.headers.get('content-type')
-  
+
   if (contentType?.includes('application/json')) {
     return await response.json()
   }
-  
+
   return { message: await response.text() }
 }
 
 // Helper function to validate token from cookies
 function getTokenFromCookies(req: NextRequest) {
   const token = req.cookies.get('one21_token')?.value
-  
+
   if (!token) {
     return NextResponse.json(
       { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
       { status: 401 }
     )
   }
-  
+
   return token
 }
 
@@ -70,16 +70,20 @@ export async function DELETE(req: NextRequest) {
 
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
+
     if (tokenResult instanceof NextResponse) {
       return tokenResult
     }
+
     const token = tokenResult
 
     // Get priority ID from query params
     const priorityIdResult = getPriorityIdFromQuery(req)
+
     if (priorityIdResult instanceof NextResponse) {
       return priorityIdResult
     }
+    
     const priorityId = priorityIdResult
 
     // Delete priority

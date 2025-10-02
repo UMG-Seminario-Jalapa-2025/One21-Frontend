@@ -31,12 +31,14 @@ export default function ConfirmDialog({
 
   const handleConfirm = async () => {
     setLoading(true)
+
     try {
       await onConfirm()
     } finally {
       setLoading(false)
     }
   }
+  
   return (
     <Dialog
       open={open}

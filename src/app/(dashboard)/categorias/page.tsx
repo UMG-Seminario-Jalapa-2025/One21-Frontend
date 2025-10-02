@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+
 import Link from 'next/link'
 
 // MUI
@@ -123,6 +124,7 @@ export default function CategoriasPage() {
                 message: 'El código es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -132,6 +134,7 @@ export default function CategoriasPage() {
                 message: 'El nombre es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -141,6 +144,7 @@ export default function CategoriasPage() {
                 message: 'La descripción es requerida',
                 severity: 'error'
             })
+
             return
         }
 
@@ -445,6 +449,7 @@ export default function CategoriasPage() {
                     if (confirmDialog.category) {
                         await handleEliminar(confirmDialog.category)
                     }
+
                     setConfirmDialog({ open: false })
                 }}
                 onCancel={() => setConfirmDialog({ open: false })}

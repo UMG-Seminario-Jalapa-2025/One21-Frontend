@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+
 import Link from 'next/link'
 
 // MUI
@@ -121,6 +122,7 @@ export default function PrioridadesPage() {
                 message: 'El código es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -130,6 +132,7 @@ export default function PrioridadesPage() {
                 message: 'El nombre es requerido',
                 severity: 'error'
             })
+
             return
         }
 
@@ -139,6 +142,7 @@ export default function PrioridadesPage() {
                 message: 'El nivel es requerido y debe ser un número',
                 severity: 'error'
             })
+
             return
         }
 
@@ -414,6 +418,7 @@ export default function PrioridadesPage() {
                     if (confirmDialog.priority) {
                         await handleEliminar(confirmDialog.priority)
                     }
+
                     setConfirmDialog({ open: false })
                 }}
                 onCancel={() => setConfirmDialog({ open: false })}

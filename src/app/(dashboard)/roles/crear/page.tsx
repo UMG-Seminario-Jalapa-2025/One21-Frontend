@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import Card from '@mui/material/Card'
@@ -16,6 +17,7 @@ import CustomTextField from '@core/components/mui/TextField'
 export default function CrearRolPage() {
     const router = useRouter()
     const [submitting, setSubmitting] = useState(false)
+
     const [formData, setFormData] = useState({
         name: '',
         description: ''
@@ -42,6 +44,7 @@ export default function CrearRolPage() {
                 message: 'El nombre del rol es requerido',
                 severity: 'error'
             })
+
             return
         }
 

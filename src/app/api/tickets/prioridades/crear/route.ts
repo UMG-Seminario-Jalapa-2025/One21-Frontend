@@ -4,25 +4,25 @@ import type { NextRequest } from 'next/server'
 // Helper function to parse response data
 async function parseResponse(response: Response) {
   const contentType = response.headers.get('content-type')
-  
+
   if (contentType?.includes('application/json')) {
     return await response.json()
   }
-  
+
   return { message: await response.text() }
 }
 
 // Helper function to validate token from cookies
 function getTokenFromCookies(req: NextRequest) {
   const token = req.cookies.get('one21_token')?.value
-  
+
   if (!token) {
     return NextResponse.json(
       { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
       { status: 401 }
     )
   }
-  
+
   return token
 }
 
@@ -55,7 +55,7 @@ function validatePriorityData(body: any) {
 // Helper function to prepare priority data
 function preparePriorityData(body: any) {
   const now = new Date().toISOString()
-  
+
   return {
     code: body.code.trim(),
     name: body.name.trim(),
@@ -97,9 +97,11 @@ export async function POST(req: NextRequest) {
 
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
+
     if (tokenResult instanceof NextResponse) {
       return tokenResult
     }
+
     const token = tokenResult
 
     // Get request body
@@ -107,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     // Validate priority data
     const validationError = validatePriorityData(body)
+    
     if (validationError) {
       return validationError
     }

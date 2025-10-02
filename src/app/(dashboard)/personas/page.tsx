@@ -25,7 +25,8 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
-import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+// import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+
 import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
 
 // Styles
@@ -60,7 +61,9 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [openModalEmpleado, setOpenModalEmpleado] = useState(false)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [personaSeleccionada, setPersonaSeleccionada] = useState<Persona | null>(null)
 
   const abrirModalEmpleado = (persona: Persona) => {
@@ -68,12 +71,13 @@ export default function PersonasPage() {
     setOpenModalEmpleado(true)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submitEmpleado = async (payload: EmpleadoPayload) => {
     try {
       // Validaciones básicas
       if (!payload.employee_number || !payload.businessPartner?.id || !payload.hire_date) {
         showAlert('error', 'Faltan datos obligatorios: Código, Socio o Fecha de contratación')
-        
+
         return
       }
 
