@@ -49,24 +49,33 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='tabler-circle text-xs' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href='/inicio' icon={<i className='tabler-smart-home' />}>Inicio</MenuItem>
+        <MenuItem href='/inicio' icon={<i className='tabler-smart-home' />}>
+          Inicio
+        </MenuItem>
 
         <MenuSection label='Módulos ERP'>
-
-          <MenuItem href='/Empleados' icon={<i className='tabler-user' />}>Empleados</MenuItem>
-          <MenuItem href='/personas' icon={<i className='tabler-users' />}>Personas</MenuItem>
+          <MenuItem href='/personas' icon={<i className='tabler-users' />}>
+            Personas
+          </MenuItem>
+          <MenuItem href='/Empleados' icon={<i className='tabler-users' />}>
+            Empleados
+          </MenuItem>
+          <MenuItem href='/clientes' icon={<i className='tabler-users' />}>
+            Clientes
+          </MenuItem>
 
           <SubMenu label='Ticket' icon={<i className='tabler-box' />}>
             <MenuItem href='/ticket/asignar'>Asignar Tickets</MenuItem>
           </SubMenu>
 
           <SubMenu label='Administración' icon={<i className='tabler-settings' />}>
-            <MenuItem href='/Empleados'>Usuarios</MenuItem>
             <MenuItem href='/admin/roles'>Roles</MenuItem>
             <MenuItem href='/admin/suppliers'>Proveedores</MenuItem>
           </SubMenu>
         </MenuSection>
-        <MenuItem href='/configuracion' icon={<i className='tabler-settings' />}>Configuración</MenuItem>
+        <MenuItem href='/configuracion' icon={<i className='tabler-settings' />}>
+          Configuración
+        </MenuItem>
       </Menu>
     </ScrollWrapper>
   )

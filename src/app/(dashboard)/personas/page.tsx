@@ -25,13 +25,16 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
+import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
+
 // Styles
 import styles from '@core/styles/table.module.css'
 
 // Custom hook
 import { useLoading } from '@/components/ui/LoadingModal'
 
-import { showAlert } from "@/components/ui/AlertProvider"
+import { showAlert } from '@/components/ui/AlertProvider'
 
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
@@ -57,6 +60,61 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+  const [openModalEmpleado, setOpenModalEmpleado] = useState(false)
+  const [personaSeleccionada, setPersonaSeleccionada] = useState<Persona | null>(null)
+
+  const abrirModalEmpleado = (persona: Persona) => {
+    setPersonaSeleccionada(persona)
+    setOpenModalEmpleado(true)
+  }
+
+  const submitEmpleado = async (payload: EmpleadoPayload) => {
+    try {
+      // Validaciones básicas
+      if (!payload.employee_number || !payload.businessPartner?.id || !payload.hire_date) {
+        showAlert('error', 'Faltan datos obligatorios: Código, Socio o Fecha de contratación')
+        
+        return
+      }
+
+      // Payload adaptado al backend (según Swagger)
+      const transformedPayload = {
+        employeeNumber: payload.employee_number,
+        businessPartnerId: payload.businessPartner.id,
+        hireDate: payload.hire_date,
+        employeeDepartment: payload.employeeDepartment?.id ? { id: payload.employeeDepartment.id } : null,
+        jobPosition: payload.jobPosition?.id ? { id: payload.jobPosition.id } : null,
+        positionTitle: payload.position_title || null,
+        managerEmployee: payload.managerEmployee?.id ? { id: payload.managerEmployee.id } : null,
+        status: payload.status,
+        baseSalary: payload.base_salary || 0,
+        currencyCode: payload.currency_code,
+        keycloakUserId: payload.keycloak_user_id || null
+      }
+
+      console.log('🧪 Payload FINAL a enviar:', JSON.stringify(transformedPayload, null, 2))
+
+      const res = await fetch('/api/empleados/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transformedPayload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al crear empleado')
+
+      // Actualizar socio de negocio
+      await handleActualizarPartner({ partnerId: payload.businessPartner.id, isEmployee: true })
+
+      showAlert('success', 'Empleado creado con éxito')
+      setOpenModalEmpleado(false)
+      await fetchData()
+    } catch (err: any) {
+      console.error('❌ Error creando empleado:', err)
+      showAlert('error', err.message || 'Error al crear empleado')
+    }
+  }
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -148,9 +206,9 @@ export default function PersonasPage() {
   }
 
   // Hacer empleado
-  const handleHacerEmpleado = (persona: Persona) => {
-    handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
-  }
+  // const handleHacerEmpleado = (persona: Persona) => {
+  //   handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+  // }
 
   // Hacer proveedor
   const handleHacerProveedor = (persona: Persona) => {
@@ -187,8 +245,6 @@ export default function PersonasPage() {
     }
   }
 
-
-
   const columns = useMemo(
     () => [
       columnHelper.accessor('code', { header: 'Código' }),
@@ -205,51 +261,40 @@ export default function PersonasPage() {
           const persona = row.original
 
           return (
-            <div className="flex gap-2 justify-center">
+            <div className='flex gap-2 justify-center'>
               {!persona.isCustomer && (
-                <Tooltip title="Hacer usuario">
-                  <IconButton
-                    color="primary"
-                    size="small"
-                    onClick={() => handleCrearUsuario(persona)}
-                  >
-                    <i className="tabler-user-plus" />
+                <Tooltip title='Hacer usuario'>
+                  <IconButton color='primary' size='small' onClick={() => handleCrearUsuario(persona)}>
+                    <i className='tabler-user-plus' />
                   </IconButton>
                 </Tooltip>
               )}
 
               {persona.isCustomer && !persona.isVendor && !persona.isEmployee && (
                 <>
-                  <Tooltip title="Hacer empleado">
-                    <IconButton
-                      color="success"
-                      size="small"
-                      onClick={() => handleHacerEmpleado(persona)}
-                    >
-                      <i className="tabler-user-share" />
+                  <Tooltip title='Hacer empleado'>
+                    <IconButton color='success' size='small' onClick={() => abrirModalEmpleado(persona)}>
+                      <i className='tabler-user-share' />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Hacer proveedor">
-                    <IconButton
-                      color="warning"
-                      size="small"
-                      onClick={() => handleHacerProveedor(persona)}
-                    >
-                      <i className="tabler-users-group" />
+
+                  <Tooltip title='Hacer proveedor'>
+                    <IconButton color='warning' size='small' onClick={() => handleHacerProveedor(persona)}>
+                      <i className='tabler-users-group' />
                     </IconButton>
                   </Tooltip>
                 </>
               )}
 
-              <Tooltip title="Editar">
-                <IconButton color="info" size="small">
-                  <i className="tabler-edit" />
+              <Tooltip title='Editar'>
+                <IconButton color='info' size='small'>
+                  <i className='tabler-edit' />
                 </IconButton>
               </Tooltip>
 
-              <Tooltip title="Eliminar">
-                <IconButton color="error" size="small" onClick={() => setConfirmDialog({ open: true, persona })}>
-                  <i className="tabler-trash-off" />
+              <Tooltip title='Eliminar'>
+                <IconButton color='error' size='small' onClick={() => setConfirmDialog({ open: true, persona })}>
+                  <i className='tabler-trash-off' />
                 </IconButton>
               </Tooltip>
             </div>
@@ -271,32 +316,30 @@ export default function PersonasPage() {
   })
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <Typography variant="h4">Personas</Typography>
-        <Link href="/personas/crear">
-          <Button variant="contained" color="primary">
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
+        <Typography variant='h4'>Personas</Typography>
+        <Link href='/personas/crear'>
+          <Button variant='contained' color='primary'>
             Crear Persona
           </Button>
         </Link>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-40">
+        <div className='flex justify-center items-center h-40'>
           <CircularProgress />
         </div>
       ) : (
         <Card>
-          <CardHeader title="Listado de Personas" />
-          <div className="overflow-x-auto">
+          <CardHeader title='Listado de Personas' />
+          <div className='overflow-x-auto'>
             <table className={styles.table}>
               <thead>
                 {table.getHeaderGroups().map(headerGroup => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
-                      <th key={header.id}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
+                      <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                     ))}
                   </tr>
                 ))}
@@ -313,37 +356,30 @@ export default function PersonasPage() {
             </table>
           </div>
 
-          <div className="flex justify-center py-4">
+          <div className='flex justify-center py-4'>
             <Pagination
               count={table.getPageCount()}
               page={table.getState().pagination.pageIndex + 1}
               onChange={(_, page) => table.setPageIndex(page - 1)}
-              color="primary"
+              color='primary'
             />
           </div>
         </Card>
       )}
 
       {/* Notificación */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
           {snackbar.message}
         </Alert>
       </Snackbar>
 
       <ConfirmDialog
         open={confirmDialog.open}
-        title="Confirmar eliminación"
+        title='Confirmar eliminación'
         message={`¿Seguro que deseas eliminar a "${confirmDialog.persona?.name}"?`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        confirmText='Eliminar'
+        cancelText='Cancelar'
         onConfirm={() => {
           if (confirmDialog.persona) {
             handleEliminar(confirmDialog.persona)
@@ -353,7 +389,16 @@ export default function PersonasPage() {
         }}
         onCancel={() => setConfirmDialog({ open: false })}
       />
-
+      <EmpleadoModal
+        open={openModalEmpleado}
+        onClose={() => setOpenModalEmpleado(false)}
+        persona={
+          personaSeleccionada
+            ? { id: personaSeleccionada.id, code: personaSeleccionada.code, name: personaSeleccionada.name }
+            : undefined
+        }
+        onSubmit={submitEmpleado}
+      />
     </div>
   )
 }
