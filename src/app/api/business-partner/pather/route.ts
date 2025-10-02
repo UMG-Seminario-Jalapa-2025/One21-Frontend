@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       tax_id: body.dpi || 'String',
       email: body.correo,
       isActive: true,
-      isCustomer: true,
+      isCustomer: false,
       isVendor: false,
       isEmployee: false,
       notes: body.referencia || null,
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       postalCode: body.zona,
       isDefault: 1,
       isActive: 1,
-      municipality: 1,
+      municipality: { id: body.municipalityId },
     }
 
     const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {

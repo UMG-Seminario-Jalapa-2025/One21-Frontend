@@ -25,7 +25,8 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
-import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+// import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+
 import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
 
 // Styles
@@ -60,7 +61,9 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [openModalEmpleado, setOpenModalEmpleado] = useState(false)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [personaSeleccionada, setPersonaSeleccionada] = useState<Persona | null>(null)
 
   const abrirModalEmpleado = (persona: Persona) => {
@@ -68,12 +71,13 @@ export default function PersonasPage() {
     setOpenModalEmpleado(true)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submitEmpleado = async (payload: EmpleadoPayload) => {
     try {
       // Validaciones básicas
       if (!payload.employee_number || !payload.businessPartner?.id || !payload.hire_date) {
         showAlert('error', 'Faltan datos obligatorios: Código, Socio o Fecha de contratación')
-        
+
         return
       }
 
@@ -132,7 +136,7 @@ export default function PersonasPage() {
   const fetchData = async () => {
     try {
       esperar()
-      const res = await fetch('/api/personas/obtener')
+      const res = await fetch('/api/business-partner/personas/obtener')
       const data: Persona[] = await res.json()
 
       setPersonas(data)
@@ -160,7 +164,7 @@ export default function PersonasPage() {
         partnerId: persona.id
       }
 
-      const res = await fetch('/api/personas/user', {
+      const res = await fetch('/api/business-partner/personas/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -185,7 +189,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch('/api/personas/actualizar', {
+      const res = await fetch('/api/business-partner/personas/actualizar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -220,7 +224,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+      const res = await fetch(`/api/business-partner/personas/eliminar?id=${persona.id}`, {
         method: 'DELETE'
       })
 
@@ -244,6 +248,12 @@ export default function PersonasPage() {
       finEspera()
     }
   }
+
+  const handleEditarPersona = (persona: Persona) => {
+    window.location.href = `/personas/editar/${persona.id}`
+  }
+
+
 
   const columns = useMemo(
     () => [
@@ -286,15 +296,15 @@ export default function PersonasPage() {
                 </>
               )}
 
-              <Tooltip title='Editar'>
-                <IconButton color='info' size='small'>
-                  <i className='tabler-edit' />
+              <Tooltip title="Editar">
+                <IconButton color="info" size="small" onClick={() => handleEditarPersona(persona)}>
+                  <i className="tabler-edit" />
                 </IconButton>
               </Tooltip>
 
-              <Tooltip title='Eliminar'>
-                <IconButton color='error' size='small' onClick={() => setConfirmDialog({ open: true, persona })}>
-                  <i className='tabler-trash-off' />
+              <Tooltip title="Eliminar">
+                <IconButton color="error" size="small" onClick={() => setConfirmDialog({ open: true, persona })}>
+                  <i className="tabler-trash-off" />
                 </IconButton>
               </Tooltip>
             </div>
@@ -316,30 +326,32 @@ export default function PersonasPage() {
   })
 
   return (
-    <div className='p-6'>
-      <div className='flex justify-between items-center mb-6'>
-        <Typography variant='h4'>Personas</Typography>
-        <Link href='/personas/crear'>
-          <Button variant='contained' color='primary'>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <Typography variant="h4">Personas</Typography>
+        <Link href="/personas/crear">
+          <Button variant="contained" color="primary">
             Crear Persona
           </Button>
         </Link>
       </div>
 
       {loading ? (
-        <div className='flex justify-center items-center h-40'>
+        <div className="flex justify-center items-center h-40">
           <CircularProgress />
         </div>
       ) : (
         <Card>
-          <CardHeader title='Listado de Personas' />
-          <div className='overflow-x-auto'>
+          <CardHeader title="Listado de Personas" />
+          <div className="overflow-x-auto">
             <table className={styles.table}>
               <thead>
                 {table.getHeaderGroups().map(headerGroup => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
-                      <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
+                      <th key={header.id}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
                     ))}
                   </tr>
                 ))}
@@ -356,30 +368,37 @@ export default function PersonasPage() {
             </table>
           </div>
 
-          <div className='flex justify-center py-4'>
+          <div className="flex justify-center py-4">
             <Pagination
               count={table.getPageCount()}
               page={table.getState().pagination.pageIndex + 1}
               onChange={(_, page) => table.setPageIndex(page - 1)}
-              color='primary'
+              color="primary"
             />
           </div>
         </Card>
       )}
 
       {/* Notificación */}
-      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
 
       <ConfirmDialog
         open={confirmDialog.open}
-        title='Confirmar eliminación'
+        title="Confirmar eliminación"
         message={`¿Seguro que deseas eliminar a "${confirmDialog.persona?.name}"?`}
-        confirmText='Eliminar'
-        cancelText='Cancelar'
+        confirmText="Eliminar"
+        cancelText="Cancelar"
         onConfirm={() => {
           if (confirmDialog.persona) {
             handleEliminar(confirmDialog.persona)
@@ -389,16 +408,7 @@ export default function PersonasPage() {
         }}
         onCancel={() => setConfirmDialog({ open: false })}
       />
-      <EmpleadoModal
-        open={openModalEmpleado}
-        onClose={() => setOpenModalEmpleado(false)}
-        persona={
-          personaSeleccionada
-            ? { id: personaSeleccionada.id, code: personaSeleccionada.code, name: personaSeleccionada.name }
-            : undefined
-        }
-        onSubmit={submitEmpleado}
-      />
+
     </div>
   )
 }
