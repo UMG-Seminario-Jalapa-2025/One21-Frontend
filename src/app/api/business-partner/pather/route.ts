@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(addressPayload)
     })
+    
+    console.log('🚀 addressRes:', addressRes)
 
     let addressData: any
     const addressContentType = addressRes.headers.get('content-type')
