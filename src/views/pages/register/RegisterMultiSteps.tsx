@@ -127,7 +127,7 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
 
     console.log("Guardando datos...", payload)
 
-    const res = await fetch("/api/users", {
+    const res = await fetch("/api/externos/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

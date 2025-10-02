@@ -37,7 +37,8 @@ const StepperCrearPersona = () => {
     colonia: '',
     referencia: '',
     ciudad: '',
-    estado: ''
+    estado: '',
+    municipalityId: null,
   })
 
   const handleNext = () => setActiveStep(prev => prev + 1)
@@ -51,7 +52,7 @@ const StepperCrearPersona = () => {
     try {
       esperar()
 
-      const res = await fetch('/api/pather', {
+      const res = await fetch('/api/business-partner/pather', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(personaFormData)

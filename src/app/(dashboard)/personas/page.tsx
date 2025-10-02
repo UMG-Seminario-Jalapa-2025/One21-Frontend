@@ -74,7 +74,7 @@ export default function PersonasPage() {
   const fetchData = async () => {
     try {
       esperar()
-      const res = await fetch('/api/personas/obtener')
+      const res = await fetch('/api/business-partner/personas/obtener')
       const data: Persona[] = await res.json()
 
       setPersonas(data)
@@ -102,7 +102,7 @@ export default function PersonasPage() {
         partnerId: persona.id
       }
 
-      const res = await fetch('/api/personas/user', {
+      const res = await fetch('/api/business-partner/personas/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -127,7 +127,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch('/api/personas/actualizar', {
+      const res = await fetch('/api/business-partner/personas/actualizar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -150,6 +150,8 @@ export default function PersonasPage() {
   // Hacer empleado
   const handleHacerEmpleado = (persona: Persona) => {
     handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+
+
   }
 
   // Hacer proveedor
@@ -162,7 +164,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+      const res = await fetch(`/api/business-partner/personas/eliminar?id=${persona.id}`, {
         method: 'DELETE'
       })
 
@@ -185,6 +187,10 @@ export default function PersonasPage() {
     } finally {
       finEspera()
     }
+  }
+
+  const handleEditarPersona = (persona: Persona) => {
+    window.location.href = `/personas/editar/${persona.id}`
   }
 
 
@@ -242,7 +248,7 @@ export default function PersonasPage() {
               )}
 
               <Tooltip title="Editar">
-                <IconButton color="info" size="small">
+                <IconButton color="info" size="small" onClick={() => handleEditarPersona(persona)}>
                   <i className="tabler-edit" />
                 </IconButton>
               </Tooltip>
