@@ -34,6 +34,10 @@ import CustomTextField from '@core/components/mui/TextField'
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+import { showAlert } from "@/components/ui/AlertProvider"
+
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
   zIndex: 2,
@@ -60,6 +64,7 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { esperar, finEspera } = useLoading()
 
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
@@ -94,6 +99,8 @@ const handleSubmit = async (e: FormEvent) => {
   setLoading(true)
 
   try {
+    esperar()
+
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -103,14 +110,21 @@ const handleSubmit = async (e: FormEvent) => {
     const data = await res.json()
 
     if (!res.ok) {
+      showAlert("error", "Credenciales inválidas")
+
       throw new Error(data?.message || 'Error de autenticación')
     }
 
     // Redirigir si login fue exitoso (el token ya está en cookie)
+    showAlert("success", "Login exitoso")
+
     router.replace('/inicio')
+    finEspera()
   } catch (err: any) {
+
     console.log(err.message || 'Error de autenticación')
   } finally {
+    finEspera()
     setLoading(false)
   }
 }

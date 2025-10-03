@@ -16,6 +16,10 @@ import '@/app/globals.css'
 // Generated Icon CSS Imports
 import '@assets/iconify-icons/generated-icons.css'
 
+// 🔹 NUEVOS IMPORTS
+import { LoadingProvider } from '@/components/ui/LoadingModal'
+import AlertProvider from '@/components/ui/AlertProvider'
+
 export const metadata = {
   title: 'One21 ERP - Bienvenido',
   description:
@@ -26,7 +30,6 @@ const RootLayout = async (props: ChildrenType) => {
   const { children } = props
 
   // Vars
-
   const systemMode = await getSystemMode()
   const direction = 'ltr'
 
@@ -34,7 +37,10 @@ const RootLayout = async (props: ChildrenType) => {
     <html id='__next' lang='en' dir={direction} suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        {children}
+        <LoadingProvider>
+          {children}
+          <AlertProvider />
+        </LoadingProvider>
       </body>
     </html>
   )
