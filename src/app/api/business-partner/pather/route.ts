@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       tax_id: body.dpi || 'String',
       email: body.correo,
       isActive: true,
-      isCustomer: true,
+      isCustomer: false,
       isVendor: false,
       isEmployee: false,
       notes: body.referencia || null,
@@ -80,7 +80,8 @@ export async function POST(req: NextRequest) {
       neighborhood: body.colonia,
       postalCode: body.zona,
       isDefault: 1,
-      isActive: 1
+      isActive: 1,
+      municipality: { id: body.municipalityId },
     }
 
     const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {
@@ -91,6 +92,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(addressPayload)
     })
+    
+    console.log('🚀 addressRes:', addressRes)
 
     let addressData: any
     const addressContentType = addressRes.headers.get('content-type')

@@ -25,13 +25,17 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
+// import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+
+import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
+
 // Styles
 import styles from '@core/styles/table.module.css'
 
 // Custom hook
 import { useLoading } from '@/components/ui/LoadingModal'
 
-import { showAlert } from "@/components/ui/AlertProvider"
+import { showAlert } from '@/components/ui/AlertProvider'
 
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
@@ -57,6 +61,64 @@ const columnHelper = createColumnHelper<Persona>()
 export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [loading, setLoading] = useState(true)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [openModalEmpleado, setOpenModalEmpleado] = useState(false)
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [personaSeleccionada, setPersonaSeleccionada] = useState<Persona | null>(null)
+
+  const abrirModalEmpleado = (persona: Persona) => {
+    setPersonaSeleccionada(persona)
+    setOpenModalEmpleado(true)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const submitEmpleado = async (payload: EmpleadoPayload) => {
+    try {
+      // Validaciones básicas
+      if (!payload.employee_number || !payload.businessPartner?.id || !payload.hire_date) {
+        showAlert('error', 'Faltan datos obligatorios: Código, Socio o Fecha de contratación')
+
+        return
+      }
+
+      // Payload adaptado al backend (según Swagger)
+      const transformedPayload = {
+        employeeNumber: payload.employee_number,
+        businessPartnerId: payload.businessPartner.id,
+        hireDate: payload.hire_date,
+        employeeDepartment: payload.employeeDepartment?.id ? { id: payload.employeeDepartment.id } : null,
+        jobPosition: payload.jobPosition?.id ? { id: payload.jobPosition.id } : null,
+        positionTitle: payload.position_title || null,
+        managerEmployee: payload.managerEmployee?.id ? { id: payload.managerEmployee.id } : null,
+        status: payload.status,
+        baseSalary: payload.base_salary || 0,
+        currencyCode: payload.currency_code,
+        keycloakUserId: payload.keycloak_user_id || null
+      }
+
+      console.log('🧪 Payload FINAL a enviar:', JSON.stringify(transformedPayload, null, 2))
+
+      const res = await fetch('/api/empleados/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transformedPayload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al crear empleado')
+
+      // Actualizar socio de negocio
+      await handleActualizarPartner({ partnerId: payload.businessPartner.id, isEmployee: true })
+
+      showAlert('success', 'Empleado creado con éxito')
+      setOpenModalEmpleado(false)
+      await fetchData()
+    } catch (err: any) {
+      console.error('❌ Error creando empleado:', err)
+      showAlert('error', err.message || 'Error al crear empleado')
+    }
+  }
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -74,7 +136,7 @@ export default function PersonasPage() {
   const fetchData = async () => {
     try {
       esperar()
-      const res = await fetch('/api/personas/obtener')
+      const res = await fetch('/api/business-partner/personas/obtener')
       const data: Persona[] = await res.json()
 
       setPersonas(data)
@@ -102,7 +164,7 @@ export default function PersonasPage() {
         partnerId: persona.id
       }
 
-      const res = await fetch('/api/personas/user', {
+      const res = await fetch('/api/business-partner/personas/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -127,7 +189,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch('/api/personas/actualizar', {
+      const res = await fetch('/api/business-partner/personas/actualizar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -148,9 +210,9 @@ export default function PersonasPage() {
   }
 
   // Hacer empleado
-  const handleHacerEmpleado = (persona: Persona) => {
-    handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
-  }
+  // const handleHacerEmpleado = (persona: Persona) => {
+  //   handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
+  // }
 
   // Hacer proveedor
   const handleHacerProveedor = (persona: Persona) => {
@@ -162,7 +224,7 @@ export default function PersonasPage() {
     try {
       esperar()
 
-      const res = await fetch(`/api/personas/eliminar?id=${persona.id}`, {
+      const res = await fetch(`/api/business-partner/personas/eliminar?id=${persona.id}`, {
         method: 'DELETE'
       })
 
@@ -187,6 +249,10 @@ export default function PersonasPage() {
     }
   }
 
+  const handleEditarPersona = (persona: Persona) => {
+    window.location.href = `/personas/editar/${persona.id}`
+  }
+
 
 
   const columns = useMemo(
@@ -205,44 +271,33 @@ export default function PersonasPage() {
           const persona = row.original
 
           return (
-            <div className="flex gap-2 justify-center">
+            <div className='flex gap-2 justify-center'>
               {!persona.isCustomer && (
-                <Tooltip title="Hacer usuario">
-                  <IconButton
-                    color="primary"
-                    size="small"
-                    onClick={() => handleCrearUsuario(persona)}
-                  >
-                    <i className="tabler-user-plus" />
+                <Tooltip title='Hacer usuario'>
+                  <IconButton color='primary' size='small' onClick={() => handleCrearUsuario(persona)}>
+                    <i className='tabler-user-plus' />
                   </IconButton>
                 </Tooltip>
               )}
 
               {persona.isCustomer && !persona.isVendor && !persona.isEmployee && (
                 <>
-                  <Tooltip title="Hacer empleado">
-                    <IconButton
-                      color="success"
-                      size="small"
-                      onClick={() => handleHacerEmpleado(persona)}
-                    >
-                      <i className="tabler-user-share" />
+                  <Tooltip title='Hacer empleado'>
+                    <IconButton color='success' size='small' onClick={() => abrirModalEmpleado(persona)}>
+                      <i className='tabler-user-share' />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Hacer proveedor">
-                    <IconButton
-                      color="warning"
-                      size="small"
-                      onClick={() => handleHacerProveedor(persona)}
-                    >
-                      <i className="tabler-users-group" />
+
+                  <Tooltip title='Hacer proveedor'>
+                    <IconButton color='warning' size='small' onClick={() => handleHacerProveedor(persona)}>
+                      <i className='tabler-users-group' />
                     </IconButton>
                   </Tooltip>
                 </>
               )}
 
               <Tooltip title="Editar">
-                <IconButton color="info" size="small">
+                <IconButton color="info" size="small" onClick={() => handleEditarPersona(persona)}>
                   <i className="tabler-edit" />
                 </IconButton>
               </Tooltip>
