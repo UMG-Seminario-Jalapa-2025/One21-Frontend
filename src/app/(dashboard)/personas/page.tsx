@@ -25,7 +25,7 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
-// import EmpleadoModal from '@/components/empleados/EmpleadoModal'
+import EmpleadoModal from '@/components/empleados/EmpleadoModal'
 
 import type { EmpleadoPayload } from '@/components/empleados/EmpleadoModal'
 
@@ -209,12 +209,6 @@ export default function PersonasPage() {
     }
   }
 
-  // Hacer empleado
-  // const handleHacerEmpleado = (persona: Persona) => {
-  //   handleActualizarPartner({ partnerId: persona.id, isEmployee: true })
-  // }
-
-  // Hacer proveedor
   const handleHacerProveedor = (persona: Persona) => {
     handleActualizarPartner({ partnerId: persona.id, isVendor: true })
   }
@@ -409,6 +403,14 @@ export default function PersonasPage() {
         onCancel={() => setConfirmDialog({ open: false })}
       />
 
+      {openModalEmpleado && personaSeleccionada && (
+        <EmpleadoModal
+          open={openModalEmpleado}
+          persona={personaSeleccionada}
+          onClose={() => setOpenModalEmpleado(false)}
+          onSubmit={submitEmpleado}
+        />
+      )}
     </div>
   )
 }
