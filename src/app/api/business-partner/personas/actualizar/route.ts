@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const token = tokenCookie.value
 
     // 1. Obtener partner actual
-    const partnerResGet = await fetch(`${baseUrlPather}partners/partners/${partnerId}`, {
+    const partnerResGet = await fetch(`${baseUrlPather}partners/${partnerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

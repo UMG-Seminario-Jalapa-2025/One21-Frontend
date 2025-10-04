@@ -16,7 +16,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     }
 
     // Traer direcciones con partner adentro
-    const res = await fetch(`${baseUrl}partners/addresses/by-partner/${id}`, {
+    const res = await fetch(`${baseUrl}addresses/by-partner/${id}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     })

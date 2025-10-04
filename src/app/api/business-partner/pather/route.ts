@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       created_by: 1
     }
 
-    const partnerRes = await fetch(`${baseUrlTemp}partners/partners`, {
+    const partnerRes = await fetch(`${baseUrlTemp}partners`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       municipality: { id: body.municipalityId },
     }
 
-    const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {
+    const addressRes = await fetch(`${baseUrlTemp}addresses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

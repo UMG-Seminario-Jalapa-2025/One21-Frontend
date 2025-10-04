@@ -23,7 +23,7 @@ export async function GET(
 
     const token = tokenCookie.value
 
-    const res = await fetch(`${baseUrlTemp}partners/partners/${id}`, {
+    const res = await fetch(`${baseUrlTemp}partners/${id}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -27,7 +27,7 @@ export async function DELETE(req: NextRequest) {
     const token = tokenCookie.value
 
     // 🔴 DELETE al backend
-    const deleteRes = await fetch(`${baseUrlPather}partners/partners/${partnerId}`, {
+    const deleteRes = await fetch(`${baseUrlPather}partners/${partnerId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

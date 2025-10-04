@@ -107,7 +107,7 @@ const StepPersonaDireccion = ({
 
     if (!formData.departmentId) return []
 
-    return municipalities.filter(m => Number(m.department?.id) === Number(formData.departmentId))
+    return municipalities.filter(m => Number(m.departments?.id) === Number(formData.departmentId))
   }, [municipalities, formData.departmentId])
 
   return (

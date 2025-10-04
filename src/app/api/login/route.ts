@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const partnerRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE}partners/partners/by-email/${encodeURIComponent(email)}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE}partners/by-email/${encodeURIComponent(email)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 

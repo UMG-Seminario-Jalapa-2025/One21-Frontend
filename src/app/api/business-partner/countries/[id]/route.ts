@@ -17,7 +17,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       )
     }
 
-    const res = await fetch(`${baseUrl}partners/countries/${id}`, {
+    const res = await fetch(`${baseUrl}countries/${id}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     })
