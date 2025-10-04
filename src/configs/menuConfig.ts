@@ -25,7 +25,7 @@ export const menuConfig = [
         label: 'Personas',
         href: '/personas',
         icon: 'tabler-users',
-        roles: ['app-admin', 'patient']
+        roles: ['app-admin', 'patient', 'uma_authorization']
       },
       {
         type: 'submenu',
