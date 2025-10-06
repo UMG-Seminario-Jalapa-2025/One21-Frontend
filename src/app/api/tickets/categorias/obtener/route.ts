@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     if (tokenResult instanceof NextResponse) {
       return tokenResult
     }
-    
+
     const token = tokenResult
 
     // Fetch categories

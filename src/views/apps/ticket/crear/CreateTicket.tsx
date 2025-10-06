@@ -35,17 +35,23 @@ const CreateTicket = () => {
   // Obtener prioridades y categorías desde la API
   useEffect(() => {
     const fetchPrioridades = async () => {
-      const res = await fetch('/api/tickets/prioridades/obtener?id=all')
+      const res = await fetch('/api/tickets/prioridades/obtener')
       const data = await res.json()
 
-      setPrioridades(data.data || [])
+      console.log('Prioridades response:', data)
+
+      // Ajusta según la estructura real de tu backend
+      setPrioridades(data.data?.priorities || data.data || [])
     }
 
     const fetchCategorias = async () => {
-      const res = await fetch('/api/tickets/categorias/obtener?id=all')
+      const res = await fetch('/api/tickets/categorias/obtener')
       const data = await res.json()
 
-      setCategorias(data.data || [])
+      console.log('Categorías response:', data)
+
+      // Ajusta según la estructura real de tu backend
+      setCategorias(data.data?.categories || data.data || [])
     }
 
     fetchPrioridades()
