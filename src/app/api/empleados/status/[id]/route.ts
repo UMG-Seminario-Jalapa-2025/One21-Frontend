@@ -18,6 +18,7 @@ export async function PATCH(req: Request, context: any): Promise<NextResponse> {
     const token = tokenCookie.value
     const { status } = await req.json()
 
+    // REVISAR ESTE ENPOINT POR CAMBIOS
     const res = await fetch(`${EMPLOYEE_BASE_URL}/employees/${id}/status`, {
       method: 'PATCH',
       headers: {
@@ -29,7 +30,7 @@ export async function PATCH(req: Request, context: any): Promise<NextResponse> {
 
     if (!res.ok) {
       const msg = await res.text()
-      
+
       console.error(`❌ Backend devolvió error: ${res.status} - ${msg}`)
 
       return NextResponse.json(

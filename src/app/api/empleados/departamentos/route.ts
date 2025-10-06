@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE}/employees/departments`)
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE}departments`)
     const data = await res.json()
 
     return NextResponse.json(data)

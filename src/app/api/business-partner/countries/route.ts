@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       updatedAt: body.updatedAt
     }
 
-    const res = await fetch(`${baseUrl}partners/countries`, {
+    const res = await fetch(`${baseUrl}countries`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

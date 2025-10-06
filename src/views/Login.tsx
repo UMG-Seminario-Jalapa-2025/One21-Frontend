@@ -69,10 +69,10 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
   const lightImg = '/images/pages/auth-mask-light.png'
-  const darkIllustration = '/images/illustrations/auth/v2-login-dark.png'
-  const lightIllustration = '/images/illustrations/auth/v2-login-light.png'
-  const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
-  const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
+  const darkIllustration = '/images/project/logo.png'
+  const lightIllustration = '/images/project/logoWhite.png'
+  const borderedDarkIllustration = '/images/project/logo.png'
+  const borderedLightIllustration = '/images/project/logoWhite.png'
 
   // Hooks
   const router = useRouter()

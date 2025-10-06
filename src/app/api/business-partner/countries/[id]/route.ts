@@ -68,7 +68,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     }
 
     // GenericController espera PUT en /partners/countries (sin {id})
-    const res = await fetch(`${baseUrl}partners/countries`, {
+    const res = await fetch(`${baseUrl}countries`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
