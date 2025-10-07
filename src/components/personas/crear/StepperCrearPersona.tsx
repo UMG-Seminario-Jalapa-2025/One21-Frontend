@@ -28,8 +28,9 @@ const StepperCrearPersona = () => {
   const [personaFormData, setPersonaFormData] = useState<any>({
     nombres: '',
     apellidos: '',
-    dpi: '',
+    dpi: '', // Comentado para futuro
     telefono: '',
+    telefonoPrincipal: '',
     calle: '',
     correo: '',
     numero: '',
@@ -39,6 +40,7 @@ const StepperCrearPersona = () => {
     ciudad: '',
     estado: '',
     municipalityId: null,
+    phones: [], // Para contactos adicionales
   })
 
   const handleNext = () => setActiveStep(prev => prev + 1)

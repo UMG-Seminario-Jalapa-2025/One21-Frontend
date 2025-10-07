@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 import Grid from '@mui/material/Grid2'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 
 import CustomTextField from '@core/components/mui/TextField'
+
+import PhoneTable, { PhoneContact } from '@/components/ui/PhoneTable'
 
 type StepPersonaInfoProps = {
   handleNext: () => void
@@ -10,18 +13,24 @@ type StepPersonaInfoProps = {
   formData: {
     nombres: string
     apellidos: string
-    dpi: string
-    telefono: string
+    dpi?: string // Comentado para futuro
+    telefono?: string // Mantenido por compatibilidad
+    telefonoPrincipal?: string // Nuevo campo para teléfono principal
+    telefonoSecundario?: string // Nuevo campo para teléfono secundario
     correo: string
+    phones?: PhoneContact[]
     [key: string]: any
   }
   setFormData: React.Dispatch<
     React.SetStateAction<{
       nombres: string
       apellidos: string
-      dpi: string
-      telefono: string
+      dpi?: string // Comentado para futuro
+      telefono?: string // Mantenido por compatibilidad
+      telefonoPrincipal?: string // Nuevo campo para teléfono principal
+      telefonoSecundario?: string // Nuevo campo para teléfono secundario
       correo: string
+      phones?: PhoneContact[]
       [key: string]: any
     }>
   >
@@ -53,7 +62,8 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             onChange={e => setFormData({ ...formData, apellidos: e.target.value })}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        {/* Comentado para futuro - Campo DPI */}
+        {/* <Grid size={{ xs: 12, sm: 6 }}>
           <CustomTextField
             fullWidth
             label="DPI"
@@ -61,14 +71,15 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             value={formData.dpi}
             onChange={e => setFormData({ ...formData, dpi: e.target.value })}
           />
-        </Grid>
+        </Grid> */}
+
         <Grid size={{ xs: 12, sm: 6 }}>
           <CustomTextField
             fullWidth
-            label="Teléfono"
+            label="Teléfono Principal"
             placeholder="0000 0000"
-            value={formData.telefono}
-            onChange={e => setFormData({ ...formData, telefono: e.target.value })}
+            value={formData.telefonoPrincipal || ''}
+            onChange={e => setFormData({ ...formData, telefonoPrincipal: e.target.value })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -79,6 +90,14 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             type="email"
             value={formData.correo}
             onChange={e => setFormData({ ...formData, correo: e.target.value })}
+          />
+        </Grid>
+
+        {/* Tabla de teléfonos adicionales */}
+        <Grid size={{ xs: 12 }}>
+          <PhoneTable
+            phones={formData.phones || []}
+            onPhonesChange={(phones) => setFormData({ ...formData, phones })}
           />
         </Grid>
 

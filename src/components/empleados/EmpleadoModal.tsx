@@ -27,7 +27,9 @@ export type EmpleadoPayload = {
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
   base_salary?: number | null
   currency_code: string
-  keycloak_user_id?: string | null
+  keycloak_user_id?: string | null,
+  email?: string
+
 }
 
 type Props = {

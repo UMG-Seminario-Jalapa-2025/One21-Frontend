@@ -12,6 +12,9 @@ import Typography from '@mui/material/Typography'
 import StepPersonaInfo from '../crear/StepPersonaInfo'
 import StepPersonaDireccion from '../crear/StepPersonaDireccion'
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { PhoneContact } from '@/components/ui/PhoneTable'
+
 import { useLoading } from '@/components/ui/LoadingModal'
 import { showAlert } from '@/components/ui/AlertProvider'
 
@@ -48,11 +51,32 @@ const StepperEditarPersona = () => {
         businessPartner: {
           ...personaFormData._raw.businessPartner,
           name: `${personaFormData.nombres} ${personaFormData.apellidos}`,
-          taxId: personaFormData.dpi,
+          taxId: personaFormData.dpi, // Comentado para futuro
           email: personaFormData.correo,
           notes: personaFormData.referencia
         },
         municipality: { id: personaFormData.municipalityId }
+      }
+
+      // Actualizar contactos si hay teléfonos adicionales
+      if (personaFormData.phones && personaFormData.phones.length > 0) {
+        try {
+          await fetch('/api/business-partner/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessPartnerId: personaFormData._raw.businessPartner.id,
+              phones: personaFormData.phones.map((phone: PhoneContact) => ({
+                phone: phone.phone,
+                firstName: '',
+                lastName: '',
+                is_active: phone.is_active !== undefined ? phone.is_active : true
+              }))
+            })
+          })
+        } catch (contactsError) {
+          console.warn('Error actualizando contactos:', contactsError)
+        }
       }
 
       const res = await fetch(`/api/business-partner/personas/${partnerId}`, {
@@ -101,9 +125,11 @@ const StepperEditarPersona = () => {
         // DATOS DE PERSONA
         nombres: address.businessPartner.name?.split(' ')[0] ?? '',
         apellidos: address.businessPartner.name?.split(' ').slice(1).join(' ') ?? '',
-        dpi: address.businessPartner.taxId ?? '',
+        dpi: address.businessPartner.taxId ?? '', // Comentado para futuro
         telefono: '',
+        telefonoPrincipal: '',
         correo: address.businessPartner.email ?? '',
+        phones: [], // Inicialmente vacío, se cargará después
 
         // DATOS DE DIRECCION
         calle: address.street ?? '',
@@ -120,6 +146,29 @@ const StepperEditarPersona = () => {
         // OBJETO CRUDO PARA RECONSTRUIR EN EL SAVE
         _raw: address
       })
+
+      // Cargar contactos adicionales después de establecer los datos básicos
+      try {
+        const contactsRes = await fetch(`/api/business-partner/contacts?businessPartnerId=${address.businessPartner.id}`)
+
+        if (contactsRes.ok) {
+          const contactsData = await contactsRes.json()
+
+          if (contactsData.contacts && contactsData.contacts.length > 0) {
+
+            setPersonaFormData((prev: any) => ({
+              ...prev,
+              phones: contactsData.contacts.map((contact: any) => ({
+                id: contact.id,
+                phone: contact.phone,
+                is_active: contact.is_active
+              }))
+            }))
+          }
+        }
+      } catch (contactsError) {
+        console.warn('Error cargando contactos:', contactsError)
+      }
     } catch (err) {
       console.error(err)
       showAlert('error', 'ERROR CARGANDO DATOS DE PERSONA')

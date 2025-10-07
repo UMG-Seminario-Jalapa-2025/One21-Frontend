@@ -31,20 +31,22 @@ export const menuConfig = [
         type: 'submenu',
         label: 'Ticket',
         icon: 'tabler-box',
-        roles: ['app-admin'],
+        roles: ['app-admin', 'uma_authorization'],
         children: [
-          { type: 'item', label: 'Asignar Tickets', href: '/ticket/asignar', roles: ['app-admin'] },
-          { type: 'item', label: 'Prioridades', href: '/prioridades', roles: ['app-admin'] },
-          { type: 'item', label: 'Categorías', href: '/categorias', roles: ['app-admin'] }
+          { type: 'item', label: 'Asignar Tickets', href: '/ticket/asignar', roles: ['app-admin', 'uma_authorization'] },
+          { type: 'item', label: 'Prioridades', href: '/prioridades', roles: ['app-admin', 'uma_authorization'] },
+          { type: 'item', label: 'Categorías', href: '/categorias', roles: ['app-admin', 'uma_authorization'] }
         ]
       },
       {
         type: 'submenu',
         label: 'Configuración',
         icon: 'tabler-settings',
-        roles: ['app-admin'],
+        roles: ['app-admin', 'uma_authorization'],
         children: [
           { type: 'item', label: 'Paises', href: '/countries', roles: ['app-admin', 'uma_authorization'] },
+          { type: 'item', label: 'Departamentos', href: '/departments', roles: ['app-admin', 'uma_authorization'] },
+          { type: 'item', label: 'Municipios', href: '/municipalities', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Roles', href: '/roles', roles: ['app-admin'] }
         ]
       }
