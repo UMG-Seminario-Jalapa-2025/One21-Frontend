@@ -27,7 +27,7 @@ export async function DELETE(req: NextRequest) {
     const token = tokenCookie.value
 
     // 🔴 DELETE al backend
-    const deleteRes = await fetch(`${baseUrlPather}partners/${partnerId}`, {
+    const deleteRes = await fetch(`${baseUrlPather}partners/partners/${partnerId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -50,7 +50,7 @@ export async function DELETE(req: NextRequest) {
     )
   } catch (err) {
     console.error('❌ Error en /api/personas/eliminar:', err)
-
+    
     return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
 }

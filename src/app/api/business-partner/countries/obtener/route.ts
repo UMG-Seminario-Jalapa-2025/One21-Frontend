@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}countries`, {
+    const res = await fetch(`${baseUrl}partners/countries`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     })

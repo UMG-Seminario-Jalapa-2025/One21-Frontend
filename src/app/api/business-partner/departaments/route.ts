@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}departments`, {
+    const res = await fetch(`${baseUrl}partners/departments`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
     console.log('Payload enviado al backend:', payload)
 
-    const res = await fetch(`${baseUrl}departments`, {
+    const res = await fetch(`${baseUrl}partners/departments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
@@ -113,7 +113,7 @@ export async function DELETE(_req: Request, context: any) {
 
     if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
 
-    const res = await fetch(`${baseUrl}departments/${id}`, {
+    const res = await fetch(`${baseUrl}partners/departments/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       created_by: 1
     }
 
-    const partnerRes = await fetch(`${baseUrlTemp}partners`, {
+    const partnerRes = await fetch(`${baseUrlTemp}partners/partners`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

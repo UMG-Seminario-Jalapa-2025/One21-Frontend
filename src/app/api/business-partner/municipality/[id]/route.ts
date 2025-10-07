@@ -39,7 +39,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
     if (!token) return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
 
-    const res = await fetch(`${API_BASE}/municipalities/${id}`, {
+    const res = await fetch(`${API_BASE}/partners/municipalities/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store'
     })
@@ -77,7 +77,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (!deptId || deptId === 0) {
       console.log('departments_id no viene en body, obteniendo del registro actual...')
 
-      const currentRes = await fetch(`${API_BASE}/municipalities/${id}`, {
+      const currentRes = await fetch(`${API_BASE}/partners/municipalities/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store'
       })
@@ -112,7 +112,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     console.log('Payload enviado al backend:', JSON.stringify(payload, null, 2))
 
-    const res = await fetch(`${API_BASE}/municipalities`, {
+    const res = await fetch(`${API_BASE}/partners/municipalities`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
     if (!token) return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
 
-    const res = await fetch(`${API_BASE}/municipalities/${id}`, {
+    const res = await fetch(`${API_BASE}/partners/municipalities/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })

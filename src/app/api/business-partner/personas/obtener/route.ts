@@ -14,7 +14,7 @@ export async function GET() {
     const token = tokenCookie.value
 
     // 👉 Consumimos la API de backend
-    const res = await fetch(`${baseUrlTemp}partners`, {
+    const res = await fetch(`${baseUrlTemp}partners/partners`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

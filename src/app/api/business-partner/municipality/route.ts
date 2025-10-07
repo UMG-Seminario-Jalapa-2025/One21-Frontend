@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
     console.log('Payload enviado:', payload)
 
-    const res = await fetch(`${API_BASE}/municipalities`, {
+    const res = await fetch(`${API_BASE}/partners/municipalities`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)

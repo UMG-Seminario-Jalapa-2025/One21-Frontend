@@ -23,11 +23,11 @@ export async function POST(req: NextRequest) {
     if (!tokenCookie?.value) {
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
-
+    
     const token = tokenCookie.value
 
     // 1. Obtener partner actual
-    const partnerResGet = await fetch(`${baseUrlPather}partners/${partnerId}`, {
+    const partnerResGet = await fetch(`${baseUrlPather}partners/partners/${partnerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. PUT para actualizar
-    const partnerResPut = await fetch(`${baseUrlPather}partners`, {
+    const partnerResPut = await fetch(`${baseUrlPather}partners/partners`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

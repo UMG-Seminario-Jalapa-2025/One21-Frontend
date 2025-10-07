@@ -18,7 +18,7 @@ export async function PATCH(req: Request, context: any) {
     const token = tokenCookie.value
     const body = await req.json()
 
-    const res = await fetch(`${baseUrl}status/${id}`, {
+    const res = await fetch(`${baseUrl}/employees/status/${id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,

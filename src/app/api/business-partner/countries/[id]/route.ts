@@ -17,7 +17,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       )
     }
 
-    const res = await fetch(`${baseUrl}countries/${id}`, {
+    const res = await fetch(`${baseUrl}partners/countries/${id}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -68,7 +68,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     }
 
     // GenericController espera PUT en /partners/countries (sin {id})
-    const res = await fetch(`${baseUrl}countries`, {
+    const res = await fetch(`${baseUrl}partners/countries`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

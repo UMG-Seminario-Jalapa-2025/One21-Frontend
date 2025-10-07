@@ -25,7 +25,7 @@ export async function PUT(req: Request, context: any) {
       country: countryId ? { id: countryId } : undefined
     }
 
-    const res = await fetch(`${baseUrl}departments`, {
+    const res = await fetch(`${baseUrl}partners/departments`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
@@ -65,7 +65,7 @@ export async function GET(_req: Request, context: any) {
       return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}departments/${id}`, {
+    const res = await fetch(`${baseUrl}partners/departments/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -109,7 +109,7 @@ export async function DELETE(_req: Request, context: any) {
       return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}departments/${id}`, {
+    const res = await fetch(`${baseUrl}partners/departments/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })
