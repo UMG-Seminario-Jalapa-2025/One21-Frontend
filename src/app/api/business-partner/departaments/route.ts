@@ -26,7 +26,6 @@ export async function GET() {
       )
     }
 
-    // NORMALIZAR isActive: null → true para cada departamento en la lista
     const normalizedData = Array.isArray(data)
       ? data.map(dept => ({
           ...dept,
@@ -38,14 +37,13 @@ export async function GET() {
     return NextResponse.json(normalizedData)
   } catch (err) {
     console.error('Error en /api/departments/obtener:', err)
-
+    
     return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
   try {
-
     const body = await req.json()
     const cookieStore = await cookies()
     const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
@@ -58,7 +56,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ step: 'validation', message: 'country_id es requerido' }, { status: 400 })
     }
 
-    // 🔥 FIX: Manejar is_active correctamente - debe respetar false explícito
     const isActive = body.is_active !== undefined ? Boolean(body.is_active) : true
 
     console.log('DEBUG POST - body.is_active:', body.is_active, '→ isActive:', isActive)
@@ -67,8 +64,6 @@ export async function POST(req: Request) {
       name: body.name,
       is_active: isActive,
       isActive: isActive,
-
-      // enviamos TODAS las variantes posibles:
       country_id: countryId,
       countryId: countryId,
       country: { id: countryId }
@@ -110,14 +105,15 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, context: any) {
   try {
+    const { id } = context.params
     const cookieStore = await cookies()
     const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
 
     if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
 
-    const res = await fetch(`${baseUrl}departments/${params.id}`, {
+    const res = await fetch(`${baseUrl}departments/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })

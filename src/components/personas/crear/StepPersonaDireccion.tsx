@@ -13,7 +13,7 @@ import { useLoading } from '@/components/ui/LoadingModal'
 
 type Country = { id: number; name: string }
 type Department = { id: number; name: string; country: Country }
-type Municipality = { id: number; name: string; department: Department }
+type Municipality = { id: number; name: string; departments: Department }
 
 type StepPersonaDireccionProps = {
   handlePrev: () => void

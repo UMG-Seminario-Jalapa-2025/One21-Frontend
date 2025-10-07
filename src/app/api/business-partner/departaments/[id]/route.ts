@@ -3,8 +3,9 @@ import { cookies } from 'next/headers'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, context: any) {
   try {
+    const { id } = context.params
     const body = await req.json()
     const cookieStore = await cookies()
     const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
@@ -12,12 +13,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (!token) return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
 
     const countryId = Number(body.country_id ?? body.countryId ?? body.country?.id ?? 0)
-
-    // Manejar is_active correctamente
     const isActive = body.is_active !== undefined ? Boolean(body.is_active) : true
 
     const payload = {
-      id: Number(params.id),
+      id: Number(id),
       name: body.name,
       is_active: isActive,
       isActive: isActive,
@@ -51,13 +50,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json(data)
   } catch (err) {
     console.error(' Error PUT /api/departments/[id]:', err)
-
+    
     return NextResponse.json({ step: 'server', message: 'Error interno' }, { status: 500 })
   }
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, context: any) {
   try {
+    const { id } = context.params
     const cookieStore = await cookies()
     const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
 
@@ -65,7 +65,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}departments/${params.id}`, {
+    const res = await fetch(`${baseUrl}departments/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -85,12 +85,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       )
     }
 
-    // NORMALIZAR isActive: null → true
     const normalizedData = {
       ...data,
       isActive: data.isActive === false || data.isActive === 0 ? false : true,
-
-      // También normalizar is_active por si acaso
       is_active: data.is_active === false || data.is_active === 0 ? false : true
     }
 
@@ -102,8 +99,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, context: any) {
   try {
+    const { id } = context.params
     const cookieStore = await cookies()
     const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
 
@@ -111,7 +109,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
       return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
     }
 
-    const res = await fetch(`${baseUrl}departments/${params.id}`, {
+    const res = await fetch(`${baseUrl}departments/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })

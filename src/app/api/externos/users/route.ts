@@ -5,6 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
+    // === Configuración base ===
     const username = process.env.NEXT_PUBLIC_INGRESS_CLIENT_USERNAME
     const password = body.password || process.env.NEXT_PUBLIC_INGRESS_CLIENT_PASSWORD
     const tenant = body.tenant || process.env.NEXT_PUBLIC_INGRESS_CLIENT_TENANT
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081/api/'
     const baseUrlTemp = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
+    // === Paso 1: Login para obtener token ===
     const loginRes = await fetch(`${baseUrl}auth/login`, {
       method: 'POST',
       headers: {
@@ -21,14 +23,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ username, password, tenant })
     })
 
-    let loginData: any
-    const contentType = loginRes.headers.get('content-type')
-
-    if (contentType && contentType.includes('application/json')) {
-      loginData = await loginRes.json()
-    } else {
-      loginData = { message: await loginRes.text() }
-    }
+    const loginData = await loginRes.json()
 
     if (!loginRes.ok) {
       return NextResponse.json({ step: 'login', message: loginData?.message || 'Error al autenticar' }, { status: loginRes.status })
@@ -36,10 +31,9 @@ export async function POST(req: NextRequest) {
 
     const token = loginData?.access_token
 
-    if (!token) {
-      return NextResponse.json({ step: 'login', message: 'Token no recibido' }, { status: 401 })
-    }
+    if (!token) return NextResponse.json({ step: 'login', message: 'Token no recibido' }, { status: 401 })
 
+    // === Paso 2: Crear usuario en Keycloak ===
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { username: _, password: __, tenant: ___, ...userPayload } = body
 
@@ -52,44 +46,51 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(userPayload)
     })
 
-    let userData: any
-    const userContentType = userRes.headers.get('content-type')
+    const userData = await userRes.json()
 
-    if (userContentType && userContentType.includes('application/json')) {
-      userData = await userRes.json()
-    } else {
-      userData = { message: await userRes.text() }
-    }
-    
     if (!userRes.ok) {
       let statusCode = userRes.status
 
-      if (userData?.detail?.includes('same username')) {
-        statusCode = 409
-      } else if (userData?.detail?.includes('execute actions email')) {
-        statusCode = 502
-      }
+      if (userData?.detail?.includes('same username')) statusCode = 409
 
       return NextResponse.json(
-        {
-          step: 'user',
-          error: userData?.error || 'user_error',
-          message: userData?.detail || userData?.message || 'Error al crear usuario'
-        },
+        { step: 'user', message: userData?.message || 'Error al crear usuario' },
         { status: statusCode }
       )
     }
 
-    const partnerPayload = {
-      code: body.username,
-      name: `${body.firstName} ${body.lastName}`,
-      tax_id: body.taxId || 'String',
+    // === Paso 2.5: Asignar rol al usuario ===
+    const rolePayload = {
       email: body.email,
+      realmRoles: ['client']
+    }
+
+    const roleRes = await fetch(`${baseUrl}admin/users/by-email/roles`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(rolePayload)
+    })
+
+    if (!roleRes.ok) {
+      console.warn('⚠️ No se pudo asignar el rol al usuario:', await roleRes.text())
+    }
+
+    // === Paso 3: Crear Partner ===
+    const code = 'on' + (body.nombres?.substring(0, 3) || '').toLowerCase() + (body.apellidos || '')
+
+    const partnerPayload = {
+      code,
+      name: `${body.nombres} ${body.apellidos}`,
+      tax_id: body.dpi || 'String',
+      email: body.correo,
       isActive: true,
-      isCustomer: true,
+      isCustomer: false,
       isVendor: false,
       isEmployee: false,
-      notes: body.notes || null,
+      notes: body.referencia || null,
       created_by: 1
     }
 
@@ -102,34 +103,63 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(partnerPayload)
     })
 
-    let partnerData: any
-    const partnerContentType = partnerRes.headers.get('content-type')
-
-    if (partnerContentType && partnerContentType.includes('application/json')) {
-      partnerData = await partnerRes.json()
-    } else {
-      partnerData = { message: await partnerRes.text() }
-    }
+    const partnerData = await partnerRes.json()
 
     if (!partnerRes.ok) {
       let statusCode = partnerRes.status
 
-      if (partnerData?.detail?.includes('duplicate key')) {
-        statusCode = 409
-      }
+      if (partnerData?.detail?.includes('duplicate key')) statusCode = 409
 
       return NextResponse.json(
-        {
-          step: 'partner',
-          error: partnerData?.error || 'partner_error',
-          message: partnerData?.detail || partnerData?.message || 'Error al crear partner'
-        },
+        { step: 'partner', message: partnerData?.message || 'Error al crear partner' },
         { status: statusCode }
       )
     }
 
     const partnerId = partnerData.id
 
+    // === Paso 4: Crear Contactos (principal + lista) ===
+    const phones = [
+      ...(body.telefonoPrincipal ? [{ phone: body.telefonoPrincipal, is_active: true }] : []),
+      ...(Array.isArray(body.phones) ? body.phones : [])
+    ]
+
+    const contactsCreated: any[] = []
+
+    for (const phone of phones) {
+      const now = new Date().toISOString().split('.')[0] + 'Z'
+
+      const contactPayload = {
+        firstName: body.nombres || '',
+        lastName: body.apellidos || '',
+        phone: phone.phone || '',
+        isActive: phone.is_active ?? true,
+        birthDate: now.split('T')[0],
+        createdAt: now,
+        updatedAt: now,
+        businessPartner: { id: partnerId },
+      }
+
+      const contactRes = await fetch(`${baseUrlTemp}contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(contactPayload),
+      })
+
+      const contactData = await contactRes.json()
+
+      if (!contactRes.ok) {
+        console.error('❌ Error al crear contacto:', contactData)
+        continue
+      }
+
+      contactsCreated.push(contactData)
+    }
+
+    // === Paso 5: Crear Dirección ===
     const addressPayload = {
       businessPartner: { id: partnerId },
       addressType: 'HOME',
@@ -138,7 +168,8 @@ export async function POST(req: NextRequest) {
       neighborhood: body.neighborhood,
       postalCode: body.postalCode,
       isDefault: 1,
-      isActive: 1
+      isActive: 1,
+      municipality: { id: body.municipalityId },
     }
 
     const addressRes = await fetch(`${baseUrlTemp}addresses`, {
@@ -150,40 +181,33 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(addressPayload)
     })
 
-    console.log('addressRes', addressRes)
-
-    let addressData: any
-    const addressContentType = addressRes.headers.get('content-type')
-
-    if (addressContentType && addressContentType.includes('application/json')) {
-      addressData = await addressRes.json()
-    } else {
-      addressData = { message: await addressRes.text() }
-    }
+    const addressData = await addressRes.json()
 
     if (!addressRes.ok) {
       let statusCode = addressRes.status
 
-      if (addressData?.detail?.includes('duplicate key')) {
-        statusCode = 409
-      }
+      if (addressData?.detail?.includes('duplicate key')) statusCode = 409
 
       return NextResponse.json(
-        {
-          step: 'address',
-          error: addressData?.error || 'address_error',
-          message: addressData?.detail || addressData?.message || 'Error al crear dirección'
-        },
+        { step: 'address', message: addressData?.message || 'Error al crear dirección' },
         { status: statusCode }
       )
     }
 
+    // === Respuesta final ===
     return NextResponse.json(
-      { message: 'Usuario, Partner y Dirección creados con éxito', user: userData, partner: partnerData, address: addressData },
+      {
+        message: 'Usuario, rol, partner, contactos y dirección creados con éxito',
+        user: userData,
+        partner: partnerData,
+        contacts: contactsCreated,
+        address: addressData
+      },
       { status: 201 }
     )
+
   } catch (err) {
-    console.error('Error en /api/pather:', err)
+    console.error('❌ Error en /api/pather:', err)
 
     return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
