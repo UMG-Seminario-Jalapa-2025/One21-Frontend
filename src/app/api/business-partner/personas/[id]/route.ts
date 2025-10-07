@@ -70,7 +70,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       updatedAt: body.businessPartner.updatedAt
     }
 
-    const resPartner = await fetch(`${baseUrl}partners`, {
+    const resPartner = await fetch(`${baseUrl}partners/partners`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       businessPartner: { id: partnerPayload.id } // relación
     }
 
-    const resAddress = await fetch(`${baseUrl}addresses`, {
+    const resAddress = await fetch(`${baseUrl}partners/addresses`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
