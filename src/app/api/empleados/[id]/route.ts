@@ -9,12 +9,12 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 // ================= PUT /api/empleados/:id =================
-// Actualiza datos del empleado (mapea hacia: PUT /employees/{id})
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const token = cookies().get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
-    
+    const cookieStore = await cookies()
+    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+
     if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
 
     const payload = await req.json()
@@ -45,17 +45,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // ================= PATCH /api/empleados/:id =================
-// Cambia status del empleado (mapea hacia: PATCH /employees/{id}/status)
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const token = cookies().get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+    const cookieStore = await cookies() // 👈 También aquí
+    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
 
     if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
 
     const payload = await req.json()
 
-    // OJO: el backend es @PatchMapping("/{id}/status")  => /employees/{id}/status
     const res = await fetch(`${baseUrl}/employees/${id}/status`, {
       method: 'PATCH',
       headers: {
