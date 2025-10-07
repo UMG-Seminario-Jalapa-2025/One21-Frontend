@@ -71,6 +71,35 @@ export default function PersonasPage() {
     setOpenModalEmpleado(true)
   }
 
+  const asignarRol = async (email: string, realmRoles: string[]) => {
+    try {
+      esperar()
+
+      const payload = {
+        email,
+        realmRoles
+      }
+
+      const res = await fetch('/api/business-partner/personas/asignarRol', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data?.message || 'Error al asignar rol')
+
+      showAlert('success', 'Rol asignado con éxito')
+      await fetchData()
+    } catch (error: any) {
+      console.error('Error asignando rol:', error)
+      setSnackbar({ open: true, message: error.message || 'Error al asignar rol', severity: 'error' })
+    } finally {
+      finEspera()
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submitEmpleado = async (payload: EmpleadoPayload) => {
     try {
@@ -110,6 +139,11 @@ export default function PersonasPage() {
 
       // Actualizar socio de negocio
       await handleActualizarPartner({ partnerId: payload.businessPartner.id, isEmployee: true })
+
+      // === Asignar rol en Keycloak ===
+      if (payload.email) {
+        asignarRol(payload.email, ['employee'])
+      }
 
       showAlert('success', 'Empleado creado con éxito')
       setOpenModalEmpleado(false)
@@ -247,7 +281,7 @@ export default function PersonasPage() {
     window.location.href = `/personas/editar/${persona.id}`
   }
 
-
+  
 
   const columns = useMemo(
     () => [
@@ -269,6 +303,13 @@ export default function PersonasPage() {
               {!persona.isCustomer && (
                 <Tooltip title='Hacer usuario'>
                   <IconButton color='primary' size='small' onClick={() => handleCrearUsuario(persona)}>
+                    <i className='tabler-user-plus' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {!persona.isCustomer && (
+                <Tooltip title='Hacer usuario'>
+                  <IconButton color='success' size='small' onClick={() => handleCrearUsuario(persona)}>
                     <i className='tabler-user-plus' />
                   </IconButton>
                 </Tooltip>

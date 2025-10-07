@@ -60,13 +60,18 @@ const initialFormData = {
   firstName: '',
   lastName: '',
   mobile: '',
+  telefonoPrincipal: '',
   street: '',
   number: '',
   zone: '',
   neighborhood: '',
   landmark: '',
   city: '',
-  state: ''
+  state: '',
+  countryId: null,
+  departmentId: null,
+  municipalityId: null,
+  phones: []
 }
 
 const Step = styled(MuiStep)<StepProps>(({ theme }) => ({
@@ -122,6 +127,24 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
       email: formData.email,
       firstName: formData.firstName,
       lastName: formData.lastName,
+      telefonoPrincipal: formData.telefonoPrincipal,
+      telefonoSecundario: formData.phones?.map((p: { phone: string }) => p.phone).join(', ') || '',
+
+      // Ubicación
+      countryId: formData.countryId,
+      departmentId: formData.departmentId,
+      municipalityId: formData.municipalityId,
+
+      // Dirección
+      street: formData.street,
+      number: formData.number,
+      zone: formData.zone,
+      neighborhood: formData.neighborhood,
+      landmark: formData.landmark,
+
+      // Datos adicionales para contactos
+      phones: formData.phones || [],
+
       realmRoles: ["client-one21"], // 🔥 fijo
     }
 

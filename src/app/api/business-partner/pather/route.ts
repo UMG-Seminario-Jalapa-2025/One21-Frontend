@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
 
     const partnerId = partnerData.id
 
+    // === Paso 2: Crear Dirección ===
     const addressPayload = {
       businessPartner: { id: partnerId },
       addressType: 'HOME',
@@ -92,8 +93,6 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(addressPayload)
     })
-    
-    console.log('🚀 addressRes:', addressRes)
 
     let addressData: any
     const addressContentType = addressRes.headers.get('content-type')
@@ -121,12 +120,66 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // === Paso 3: Crear Contactos ===
+    const phones = [
+      ...(body.telefonoPrincipal ? [{ phone: body.telefonoPrincipal, is_active: true }] : []),
+      ...(Array.isArray(body.phones) ? body.phones : [])
+    ]
+
+    const contactsCreated: any[] = []
+
+    for (const phone of phones) {
+      const now = new Date().toISOString().split('.')[0] + 'Z'
+
+      const contactPayload = {
+        firstName: body.nombres || '',
+        lastName: body.apellidos || '',
+        phone: phone.phone || '',
+        isActive: phone.is_active ?? true,
+        birthDate: now.split('T')[0], // fecha simple YYYY-MM-DD
+        createdAt: now,
+        updatedAt: now,
+        businessPartner: { id: partnerId },
+      }
+
+      const contactRes = await fetch(`${baseUrlTemp}partners/contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(contactPayload),
+      })
+
+      const contactContentType = contactRes.headers.get('content-type')
+      let contactData: any
+
+      if (contactContentType && contactContentType.includes('application/json')) {
+        contactData = await contactRes.json()
+      } else {
+        contactData = { message: await contactRes.text() }
+      }
+
+      if (!contactRes.ok) {
+        console.error('❌ Error al crear contacto:', contactData)
+        continue // no interrumpe todo el flujo, pero lo registra
+      }
+
+      contactsCreated.push(contactData)
+    }
+
+    // === Respuesta Final ===
     return NextResponse.json(
-      { message: 'Persona creada con éxito', partner: partnerData, address: addressData },
+      {
+        message: 'Persona creada con éxito',
+        partner: partnerData,
+        address: addressData,
+        contacts: contactsCreated,
+      },
       { status: 201 }
     )
   } catch (err) {
-    console.error('❌ Error en /api/personas:', err)
+    console.error('❌ Error en /api/business-partner/pather:', err)
 
     return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
