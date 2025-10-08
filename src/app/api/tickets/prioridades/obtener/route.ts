@@ -28,7 +28,7 @@ function getTokenFromCookies(req: NextRequest) {
 
 // Helper function to fetch priorities
 async function fetchPriorities(baseUrl: string, token: string) {
-  return await fetch(`${baseUrl}ticket/priorities`, {
+  return await fetch(`${baseUrl}priorities`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
