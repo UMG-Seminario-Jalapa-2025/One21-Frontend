@@ -139,8 +139,8 @@ const StepperEditarPersona = () => {
         referencia: address.businessPartner.notes ?? '',
         ciudad: '',
         estado: '',
-        countryId: address.municipality?.department?.country?.id,
-        departmentId: address.municipality?.department?.id,
+        countryId: address.municipality?.departments?.country?.id,
+        departmentId: address.municipality?.departments?.id,
         municipalityId: address.municipality?.id,
 
         // OBJETO CRUDO PARA RECONSTRUIR EN EL SAVE
