@@ -8,109 +8,156 @@ import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import TextField from '@mui/material/TextField'
-import type { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
 import FormControl from '@mui/material/FormControl'
+import Snackbar from '@mui/material/Snackbar'
+import MuiAlert from '@mui/material/Alert'
 
+// Alert helper
+const Alert = MuiAlert
 
 const CreateTicket = () => {
-  const [form, setForm] = useState({
-    subject: '',
-    description: '',
-    priority_id: '',
-    category_id: '',
-    contact_name: '',
-    contact_email: '',
-    contact_phone: ''
-  })
+const [form, setForm] = useState({
+  subject: '',
+  description: '',
+  priority_id: '',
+  category_id: '',
+  contact_name: '',
+  contact_email: '',
+  contact_phone: ''
+})
 
-  const [prioridades, setPrioridades] = useState<{ id: number, nombre: string }[]>([])
-  const [categorias, setCategorias] = useState<{ id: number, nombre: string }[]>([])
-  const [loading, setLoading] = useState(false)
+const [prioridades, setPrioridades] = useState<{ id: number; name: string }[]>([])
+const [categorias, setCategorias] = useState<{ id: number; name: string }[]>([])
+const [loading, setLoading] = useState(false)
 
-  // Obtener prioridades y categorías desde la API
-  useEffect(() => {
-    const fetchPrioridades = async () => {
+// ✅ Estado para Snackbar
+const [snackbar, setSnackbar] = useState<{
+  open: boolean
+  message: string
+  severity: 'success' | 'error'
+}>({
+  open: false,
+  message: '',
+  severity: 'success'
+})
+
+// Obtener prioridades y categorías desde la API
+useEffect(() => {
+  const fetchPrioridades = async () => {
+    try {
       const res = await fetch('/api/tickets/prioridades/obtener')
       const data = await res.json()
-
-      console.log('Prioridades response:', data)
-
-      // Ajusta según la estructura real de tu backend
-      setPrioridades(data.data?.priorities || data.data || [])
+      
+      setPrioridades(data?.data || [])
+    } catch (error) {
+      console.error('Error al obtener prioridades:', error)
     }
+  }
 
-    const fetchCategorias = async () => {
+  const fetchCategorias = async () => {
+    try {
       const res = await fetch('/api/tickets/categorias/obtener')
       const data = await res.json()
 
-      console.log('Categorías response:', data)
+      setCategorias(data?.data || [])
+    } catch (error) {
+      console.error('Error al obtener categorías:', error)
+    }
+  }
 
-      // Ajusta según la estructura real de tu backend
-      setCategorias(data.data?.categories || data.data || [])
+  fetchPrioridades()
+  fetchCategorias()
+}, [])
+
+// Manejadores de cambios
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }))
+}
+
+const handleSelectChange = (e: SelectChangeEvent) => {
+  const { name, value } = e.target
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }))
+}
+
+const handleCloseSnackbar = () => {
+  setSnackbar(prev => ({ ...prev, open: false }))
+}
+
+// Enviar formulario
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+
+  try {
+    const payload = {
+      subject: form.subject,
+      description: form.description,
+      category: { id: Number(form.category_id) },
+      priority: { id: Number(form.priority_id) },
+      status: { id: 1 }, // estado inicial (ej. "Abierto")
+      contactName: form.contact_name,
+      contactEmail: form.contact_email,
+      contactPhone: form.contact_phone
     }
 
-    fetchPrioridades()
-    fetchCategorias()
-  }, [])
+    const res = await fetch('/api/tickets/ticket/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-
-    setForm(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    const { name, value } = e.target
-
-    setForm(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/tickets/ticket/crear', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+    if (res.ok) {
+      setSnackbar({
+        open: true,
+        message: 'Ticket creado con éxito',
+        severity: 'success'
       })
 
-      const data = await res.json()
-
-      if (res.ok) {
-        alert('Ticket creado:\n' + JSON.stringify(data.data, null, 2))
-        setForm({
-          subject: '',
-          description: '',
-          priority_id: '',
-          category_id: '',
-          contact_name: '',
-          contact_email: '',
-          contact_phone: ''
-        })
-      } else {
-        alert(data.message || 'Error al crear ticket')
-      }
-    } catch {
-      alert('Error de conexión')
+      setForm({
+        subject: '',
+        description: '',
+        priority_id: '',
+        category_id: '',
+        contact_name: '',
+        contact_email: '',
+        contact_phone: ''
+      })
+    } else {
+      setSnackbar({
+        open: true,
+        message: 'Error al crear el ticket',
+        severity: 'error'
+      })
     }
-
-    setLoading(false)
+  } catch (error) {
+    console.error('Error al enviar formulario:', error)
+    setSnackbar({
+      open: true,
+      message: 'Error de conexión con el servidor',
+      severity: 'error'
+    })
   }
 
-  return (
+  setLoading(false)
+}
+
+return (
+  <>
     <Card>
       <CardHeader title="Crear Ticket" />
       <CardContent>
@@ -126,6 +173,7 @@ const CreateTicket = () => {
                 required
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel id="prioridad-label">Prioridad</InputLabel>
@@ -138,12 +186,13 @@ const CreateTicket = () => {
                 >
                   {prioridades.map(p => (
                     <MenuItem key={p.id} value={p.id}>
-                      {p.nombre}
+                      {p.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel id="categoria-label">Categoría</InputLabel>
@@ -156,12 +205,13 @@ const CreateTicket = () => {
                 >
                   {categorias.map(c => (
                     <MenuItem key={c.id} value={c.id}>
-                      {c.nombre}
+                      {c.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Nombre de contacto"
@@ -172,6 +222,7 @@ const CreateTicket = () => {
                 required
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Email de contacto"
@@ -183,6 +234,7 @@ const CreateTicket = () => {
                 type="email"
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Teléfono de contacto"
@@ -192,6 +244,7 @@ const CreateTicket = () => {
                 fullWidth
               />
             </Grid>
+
             <Grid item xs={12}>
               <TextField
                 label="Descripción"
@@ -204,6 +257,7 @@ const CreateTicket = () => {
                 required
               />
             </Grid>
+
             <Grid item xs={12}>
               <Button type="submit" variant="contained" color="primary" disabled={loading}>
                 {loading ? 'Creando...' : 'Crear Ticket'}
@@ -213,7 +267,20 @@ const CreateTicket = () => {
         </form>
       </CardContent>
     </Card>
-  )
+
+    {/* ✅ Snackbar global */}
+    <Snackbar
+      open={snackbar.open}
+      autoHideDuration={4000}
+      onClose={handleCloseSnackbar}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
+  </>
+)
 }
 
 export default CreateTicket

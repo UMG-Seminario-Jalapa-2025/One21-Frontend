@@ -33,6 +33,7 @@ export const menuConfig = [
         icon: 'tabler-box',
         roles: ['app-admin', 'uma_authorization'],
         children: [
+          { type: 'item', label: 'Crear Ticket', href: '/ticket/crear', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Asignar Tickets', href: '/ticket/asignar', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Prioridades', href: '/prioridades', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Categorías', href: '/categorias', roles: ['app-admin', 'uma_authorization'] }
