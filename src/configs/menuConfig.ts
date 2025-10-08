@@ -47,7 +47,7 @@ export const menuConfig = [
           { type: 'item', label: 'Paises', href: '/countries', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Roles', href: '/roles', roles: ['app-admin'] },
           { type: 'item', label: 'Puestos de trabajo', href: '/job_position', roles: ['app-admin'] },
-          { type: 'item', label: 'Departamentos', href: '/employee_departaments', roles: ['app-admin'] },
+          { type: 'item', label: 'Departamento de trabajo', href: '/employee_departaments', roles: ['app-admin'] },
           { type: 'item', label: 'Departamentos', href: '/departments', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Municipios', href: '/municipalities', roles: ['app-admin', 'uma_authorization'] },
           { type: 'item', label: 'Roles', href: '/roles', roles: ['app-admin'] }
