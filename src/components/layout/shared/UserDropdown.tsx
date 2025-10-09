@@ -47,7 +47,7 @@ const UserDropdown = () => {
       if (!res.ok) return
       const data = await res.json()
 
-      setPartnerName(data.partner || data.email || '')
+      setPartnerName( data.email || 'Usuario' )
     } catch (error) {
       console.error('Error obteniendo datos del usuario:', error)
     }

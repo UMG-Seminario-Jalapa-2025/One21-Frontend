@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -29,80 +29,127 @@ interface Ticket {
   cliente: string
   asunto: string
   descripcion: string
-  prioridad: 'Alta' | 'Media' | 'Baja'
-  estado: 'Pendiente' | 'Asignado'
+  prioridad: string
+  estado: string
   asignadoA?: string
+  _raw: any // 🔹 guardamos el ticket completo para reenviarlo luego
 }
 
+interface Empleado {
+  id: number
+  name: string
+}
+
+// -----------------------------
+// Tabla
+// -----------------------------
 const columnHelper = createColumnHelper<Ticket>()
 
-// -----------------------------
-// Data quemada
-// -----------------------------
-const defaultData: Ticket[] = [
-  {
-    id: 101,
-    cliente: 'Juan Pérez',
-    asunto: 'Error en login',
-    descripcion: 'El usuario no puede acceder al sistema',
-    prioridad: 'Alta',
-    estado: 'Pendiente'
-  },
-  {
-    id: 102,
-    cliente: 'ACME Inc.',
-    asunto: 'Factura duplicada',
-    descripcion: 'Cliente reporta doble cobro en factura',
-    prioridad: 'Media',
-    estado: 'Pendiente'
-  },
-  {
-    id: 103,
-    cliente: 'María López',
-    asunto: 'Consulta de servicio',
-    descripcion: 'Quiere información de plan premium',
-    prioridad: 'Baja',
-    estado: 'Asignado',
-    asignadoA: 'Carlos López'
-  }
-]
-
-// Técnicos random
-const tecnicos = ['Carlos López', 'María García', 'Ana Rodríguez']
-
-// -----------------------------
-// Componente principal
-// -----------------------------
 const AssignedTickets = () => {
-  const [data, setData] = useState<Ticket[]>(defaultData)
+  const [data, setData] = useState<Ticket[]>([])
+  const [empleados, setEmpleados] = useState<Empleado[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const asignarTicket = (ticketId: number, tecnico: string) => {
-    setData(prev =>
-      prev.map(t =>
-        t.id === ticketId
-          ? { ...t, estado: 'Asignado', asignadoA: tecnico }
-          : t
+  // -----------------------------
+  // Lógica para asignar ticket
+  // -----------------------------
+  const asignarTicket = async (ticketId: number, empleadoId: number) => {
+    try {
+      const ticket = data.find(t => t.id === ticketId)
+
+      if (!ticket) return
+
+      const empleado = empleados.find(e => e.id === empleadoId)
+
+      // 🔹 Mandar todo el objeto del ticket (completo)
+      const payload = {
+        ...ticket._raw, // ticket completo del backend
+        assignedToEmployeeId: empleadoId // reemplazar asignación
+      }
+
+      console.log('📤 Enviando ticket:', payload)
+
+      const res = await fetch('/api/tickets/asignaciones/asignar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const result = await res.json()
+
+      if (!res.ok) {
+        console.error('Error asignando ticket:', result)
+
+        return
+      }
+
+      console.log('✅ Ticket asignado:', result)
+
+      // Actualiza visualmente
+      setData(prev =>
+        prev.map(t =>
+          t.id === ticketId
+            ? { ...t, estado: 'Asignado', asignadoA: empleado?.name || '' }
+            : t
+        )
       )
-    )
+    } catch (error) {
+      console.error('Error al asignar ticket:', error)
+    }
   }
 
+  // -----------------------------
+  // Obtener tickets y empleados reales
+  // -----------------------------
+  const fetchTickets = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/tickets/asignaciones/obtener')
+      const json = await res.json()
+
+      if (res.ok && json?.tickets) {
+        const mapped: Ticket[] = json.tickets.map((t: any) => ({
+          id: t.id,
+          cliente: t.contactName || 'Sin cliente',
+          asunto: t.subject,
+          descripcion: t.description,
+          prioridad: t.priority?.name || 'N/A',
+          estado: t.status?.name || 'Pendiente',
+          asignadoA: t.assignedToEmployeeId ? 'Asignado' : undefined,
+          _raw: t // 🔹 guardamos el objeto completo
+        }))
+
+        setData(mapped)
+        setEmpleados(json.empleados || [])
+      } else {
+        console.error('Error cargando datos:', json.message)
+      }
+    } catch (error) {
+      console.error('Error al cargar tickets:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTickets()
+  }, [])
+
+  // -----------------------------
+  // Definición de columnas
+  // -----------------------------
   const columns = useMemo(
     () => [
       columnHelper.accessor('id', {
         header: 'Ticket',
         cell: info => `#${info.getValue()}`
       }),
-      columnHelper.accessor('cliente', {
-        header: 'Cliente'
-      }),
-      columnHelper.accessor('asunto', {
-        header: 'Asunto'
-      }),
-      columnHelper.accessor('descripcion', {
-        header: 'Descripción'
-      }),
+      columnHelper.accessor('cliente', { header: 'Cliente' }),
+      columnHelper.accessor('asunto', { header: 'Asunto' }),
+      columnHelper.accessor('descripcion', { header: 'Descripción' }),
       columnHelper.accessor('prioridad', {
         header: 'Prioridad',
+        
         cell: info => {
           const value = info.getValue()
 
@@ -114,6 +161,7 @@ const AssignedTickets = () => {
               : 'success'
 
           return <Chip label={value} color={color as any} size="small" />
+
         }
       }),
       columnHelper.accessor('estado', {
@@ -143,15 +191,15 @@ const AssignedTickets = () => {
               size="small"
               displayEmpty
               defaultValue=""
-              onChange={e => asignarTicket(ticket.id, e.target.value)}
-              sx={{ minWidth: 150 }}
+              onChange={e => asignarTicket(ticket.id, Number(e.target.value))}
+              sx={{ minWidth: 180 }}
             >
               <MenuItem value="" disabled>
                 Seleccionar técnico
               </MenuItem>
-              {tecnicos.map(tec => (
-                <MenuItem key={tec} value={tec}>
-                  {tec}
+              {empleados.map(emp => (
+                <MenuItem key={emp.id} value={emp.id}>
+                  {emp.name}
                 </MenuItem>
               ))}
             </Select>
@@ -159,7 +207,7 @@ const AssignedTickets = () => {
         }
       })
     ],
-    []
+    [empleados]
   )
 
   const table = useReactTable({
@@ -167,6 +215,11 @@ const AssignedTickets = () => {
     columns,
     getCoreRowModel: getCoreRowModel()
   })
+
+  // -----------------------------
+  // Render
+  // -----------------------------
+  if (loading) return <p className="p-4">Cargando tickets...</p>
 
   return (
     <Card>
