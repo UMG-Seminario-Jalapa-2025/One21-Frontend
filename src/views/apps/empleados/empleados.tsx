@@ -53,45 +53,21 @@ export default function EmpleadosPage() {
   const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null)
   const [openModal, setOpenModal] = useState(false)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/empleados')
+  // ================= CARGAR LISTA =================
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/empleados?ts=' + Date.now(), { cache: 'no-store' })
 
-        if (!res.ok) throw new Error(`Error al obtener empleados: ${res.status}`)
+      if (!res.ok) throw new Error(`Error al obtener empleados: ${res.status}`)
 
-        const empleadosData = await res.json()
+      const empleadosData = await res.json()
 
-        const empleadosNormalizados: Empleado[] = await Promise.all(
-          empleadosData.map(async (emp: any) => {
-            try {
-              const socioRes = await fetch(`/api/pather/obtener/${emp.businessPartnerId}`)
+      const empleadosNormalizados: Empleado[] = await Promise.all(
+        empleadosData.map(async (emp: any) => {
+          try {
+            const socioRes = await fetch(`/api/pather/obtener/${emp.businessPartnerId}`, { cache: 'no-store' })
 
-              if (!socioRes.ok) {
-                return {
-                  id: emp.id,
-                  nombre: '—',
-                  email: '—',
-                  telefono: '—',
-                  fecha: emp.hireDate,
-                  activo: emp.status === 'ACTIVE'
-                }
-              }
-
-              const socio = await socioRes.json()
-
-              return {
-                id: emp.id,
-                nombre: socio?.name || '—',
-                email: socio?.email || '—',
-                telefono: socio?.phone || '—',
-                fecha: emp.hireDate,
-                activo: emp.status === 'ACTIVE',
-                positionTitle: emp.positionTitle,
-                baseSalary: emp.baseSalary,
-                currencyCode: emp.currencyCode
-              }
-            } catch {
+            if (!socioRes.ok) {
               return {
                 id: emp.id,
                 nombre: '—',
@@ -101,25 +77,51 @@ export default function EmpleadosPage() {
                 activo: emp.status === 'ACTIVE'
               }
             }
-          })
-        )
 
-        setEmpleados(empleadosNormalizados)
-      } catch (error: any) {
-        console.error('❌ Error cargando empleados:', error.message)
-      } finally {
-        setLoading(false)
-      }
+            const socio = await socioRes.json()
+
+            return {
+              id: emp.id,
+              nombre: socio?.name || '—',
+              email: socio?.email || '—',
+              telefono: socio?.phone || '—',
+              fecha: emp.hireDate,
+              activo: emp.status === 'ACTIVE',
+              positionTitle: emp.positionTitle,
+              baseSalary: emp.baseSalary,
+              currencyCode: emp.currencyCode
+            }
+          } catch {
+            return {
+              id: emp.id,
+              nombre: '—',
+              email: '—',
+              telefono: '—',
+              fecha: emp.hireDate,
+              activo: emp.status === 'ACTIVE'
+            }
+          }
+        })
+      )
+
+      setEmpleados(empleadosNormalizados)
+    } catch (error: any) {
+      console.error('❌ Error cargando empleados:', error.message)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
 
+  // ================= PATCH estado =================
   const toggleActivo = async (id: number, value: boolean) => {
     try {
       const nuevoEstado = value ? 'ACTIVE' : 'INACTIVE'
 
-      const res = await fetch(`/api/empleados/status/${id}`, {
+      const res = await fetch(`/api/empleados/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nuevoEstado })
@@ -133,25 +135,28 @@ export default function EmpleadosPage() {
     }
   }
 
-  const handleEliminar = (id: number) => {
-    setEmpleados(prev => prev.filter(e => e.id !== id))
-  }
-
+  // ================= Editar =================
   const handleEditar = (empleado: Empleado) => {
     setSelectedEmpleado(empleado)
     setOpenModal(true)
   }
 
+  // ================= Guardar cambios =================
   const handleGuardar = async () => {
     if (!selectedEmpleado) return
 
     try {
-      // 🔹 solo enviamos lo laboral
+      const payload = {
+        positionTitle: selectedEmpleado.positionTitle,
+        baseSalary: selectedEmpleado.baseSalary,
+        currencyCode: selectedEmpleado.currencyCode
+      }
 
       const res = await fetch(`/api/empleados/${selectedEmpleado.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedEmpleado)
+        body: JSON.stringify(payload),
+        cache: 'no-store'
       })
 
       if (!res.ok) throw new Error('Error al actualizar empleado')
@@ -159,16 +164,16 @@ export default function EmpleadosPage() {
       const actualizado = await res.json()
 
       setEmpleados(prev => prev.map(e => (e.id === actualizado.id ? { ...e, ...actualizado } : e)))
-
       setOpenModal(false)
     } catch (err) {
       console.error('❌ Error al guardar cambios:', err)
     }
   }
 
+  // ================= Filtrado =================
   const empleadosFiltrados = useMemo(() => {
     const q = query.toLowerCase().trim()
-
+    
     if (!q) return empleados
 
     return empleados.filter(
@@ -177,6 +182,7 @@ export default function EmpleadosPage() {
     )
   }, [query, empleados])
 
+  // ================= Columnas =================
   const columns = useMemo(
     () => [
       columnHelper.accessor('nombre', { header: 'Nombre' }),
@@ -186,7 +192,7 @@ export default function EmpleadosPage() {
         header: 'Fecha',
         cell: info => {
           const d = new Date(info.getValue())
-          
+
           return isNaN(+d) ? info.getValue() : d.toLocaleDateString()
         }
       }),
@@ -206,11 +212,6 @@ export default function EmpleadosPage() {
                 <i className='tabler-edit' />
               </IconButton>
             </Tooltip>
-            <Tooltip title='Eliminar'>
-              <IconButton color='error' size='small' onClick={() => handleEliminar(info.row.original.id)}>
-                <i className='tabler-trash-off' />
-              </IconButton>
-            </Tooltip>
           </div>
         )
       })
@@ -226,6 +227,7 @@ export default function EmpleadosPage() {
     initialState: { pagination: { pageSize: 5 } }
   })
 
+  // ================= Render =================
   return (
     <div className='p-6'>
       <div className='flex justify-between items-center mb-6'>

@@ -28,7 +28,7 @@ function getTokenFromCookies(req: NextRequest) {
 
 // Helper function to fetch categories
 async function fetchCategories(baseUrl: string, token: string) {
-  return await fetch(`${baseUrl}ticket/categories`, {
+  return await fetch(`${baseUrl}categories`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     if (tokenResult instanceof NextResponse) {
       return tokenResult
     }
-    
+
     const token = tokenResult
 
     // Fetch categories

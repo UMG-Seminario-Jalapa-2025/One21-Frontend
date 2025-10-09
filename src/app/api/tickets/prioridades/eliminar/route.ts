@@ -83,7 +83,7 @@ export async function DELETE(req: NextRequest) {
     if (priorityIdResult instanceof NextResponse) {
       return priorityIdResult
     }
-    
+
     const priorityId = priorityIdResult
 
     // Delete priority
