@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
@@ -83,7 +83,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json(data, { status: res.status })
   } catch (err) {
     console.error('❌ Error DELETE /employee_positions/[id]:', err)
-    
+
     return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 })
   }
 }
