@@ -75,7 +75,7 @@ function preparePriorityData(body: any) {
 
 // Helper function to update priority
 async function updatePriority(baseUrl: string, token: string, priorityData: any) {
-  return await fetch(`${baseUrl}ticket/priorities`, {
+  return await fetch(`${baseUrl}priorities`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
