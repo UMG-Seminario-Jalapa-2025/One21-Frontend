@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   try {
     const baseUrlTickets = process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/tickets/'
     const baseUrlUsers = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
-    const baseUrlPartners = process.env.NEXT_PUBLIC_API_BASE_URL_PARTNER || 'http://localhost:8090/partners/'
+    const baseUrlPartners = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/partners/'
 
     // Obtener token
     const tokenResult = getTokenFromCookies(req)
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     const empleadosConPartner = await Promise.all(
       employeesData.map(async (emp: any) => {
         try {
-          const partnerRes = await fetch(`${baseUrlPartners}partners/${emp.businessPartnerId}`, {
+          const partnerRes = await fetch(`${baseUrlPartners}partners/partners${emp.businessPartnerId}`, {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
