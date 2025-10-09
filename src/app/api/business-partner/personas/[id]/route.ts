@@ -15,28 +15,50 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
     }
 
-    // Traer direcciones con partner adentro
-    const res = await fetch(`${baseUrl}partners/addresses/by-partner/${id}`, {
+    // Obtener dirección del partner
+    const resAddress = await fetch(`${baseUrl}partners/addresses/by-partner/${id}`, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
 
-    const data = await res.json()
+    const dataAddress = await resAddress.json()
 
-    if (!res.ok) {
+    if (!resAddress.ok) {
+
       return NextResponse.json(
-        { step: 'partner_address_get', message: data?.message || 'Error al obtener datos' },
-        { status: res.status }
+        { step: 'partner_address_get', message: dataAddress?.message || 'Error al obtener dirección' },
+        { status: resAddress.status }
       )
     }
 
-    return NextResponse.json(data)
+    // Obtener contactos del partner
+    const resContacts = await fetch(`${baseUrl}partners/contacts/by-partner/${id}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const dataContacts = await resContacts.json()
+
+    if (!resContacts.ok) {
+
+      return NextResponse.json(
+        { step: 'contacts_get', message: dataContacts?.message || 'Error al obtener contactos' },
+        { status: resContacts.status }
+      )
+    }
+
+    // 🔹 4. Respuesta combinada
+    return NextResponse.json({
+      address: dataAddress,
+      phone:  dataContacts, // Devolver contactos tal cual (raw)
+    })
   } catch (err) {
     console.error('❌ Error GET /api/business-partner/personas/[id]:', err)
 
     return NextResponse.json({ step: 'server', message: 'Error interno' }, { status: 500 })
   }
 }
+
 
 // ================= PUT =================
 export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
