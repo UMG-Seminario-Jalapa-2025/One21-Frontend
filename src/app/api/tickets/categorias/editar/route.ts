@@ -81,7 +81,7 @@ function prepareCategoryData(body: any) {
 
 // Helper function to update category
 async function updateCategory(baseUrl: string, token: string, categoryData: any) {
-  return await fetch(`${baseUrl}ticket/categories`, {
+  return await fetch(`${baseUrl}categories`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

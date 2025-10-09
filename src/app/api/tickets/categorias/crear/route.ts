@@ -75,7 +75,7 @@ function prepareCategoryData(body: any) {
 
 // Helper function to create category
 async function createCategory(baseUrl: string, token: string, categoryData: any) {
-  return await fetch(`${baseUrl}ticket/categories`, {
+  return await fetch(`${baseUrl}categories`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

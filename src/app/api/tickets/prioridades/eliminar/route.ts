@@ -43,7 +43,7 @@ function getPriorityIdFromQuery(req: NextRequest) {
 
 // Helper function to delete priority
 async function deletePriority(baseUrl: string, token: string, priorityId: string) {
-  return await fetch(`${baseUrl}ticket/priorities/${priorityId}`, {
+  return await fetch(`${baseUrl}priorities/${priorityId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
