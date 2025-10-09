@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
 export async function GET() {
   try {
@@ -17,7 +17,7 @@ export async function GET() {
     })
 
     const data = await res.json()
-    
+
     return NextResponse.json(data, { status: res.status })
   } catch (err) {
     console.error('❌ Error GET /employee_positions/obtener:', err)
