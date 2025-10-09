@@ -12,11 +12,9 @@ import Typography from '@mui/material/Typography'
 import StepPersonaInfo from '../crear/StepPersonaInfo'
 import StepPersonaDireccion from '../crear/StepPersonaDireccion'
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import { PhoneContact } from '@/components/ui/PhoneTable'
-
 import { useLoading } from '@/components/ui/LoadingModal'
 import { showAlert } from '@/components/ui/AlertProvider'
+
 
 const steps = ['Información de la Persona', 'Dirección']
 
@@ -28,20 +26,17 @@ const StepperEditarPersona = () => {
 
   const [activeStep, setActiveStep] = useState(0)
   const [personaFormData, setPersonaFormData] = useState<any>(null)
+  const [phonesOriginal, setPhonesOriginal] = useState<any[]>([])
 
-  // FUNCIONES PARA AVANZAR Y RETROCEDER EN EL STEPPER
   const handleNext = () => setActiveStep(prev => prev + 1)
   const handlePrev = () => setActiveStep(prev => prev - 1)
-
-  // FUNCION PARA CANCELAR Y VOLVER A LA LISTA
   const handleCancel = () => router.push('/personas')
 
-  // FUNCION PARA GUARDAR LOS CAMBIOS
+  // ========================== GUARDAR CAMBIOS ==========================
   const handleSave = async () => {
     try {
       esperar()
 
-      // RECONSTRUIMOS EL OBJETO COMPLETO QUE ESPERA EL BACKEND
       const payload = {
         ...personaFormData._raw,
         street: personaFormData.calle,
@@ -51,38 +46,107 @@ const StepperEditarPersona = () => {
         businessPartner: {
           ...personaFormData._raw.businessPartner,
           name: `${personaFormData.nombres} ${personaFormData.apellidos}`,
-          taxId: personaFormData.dpi, // Comentado para futuro
+          taxId: personaFormData.dpi,
           email: personaFormData.correo,
-          notes: personaFormData.referencia
+          notes: personaFormData.referencia,
         },
-        municipality: { id: personaFormData.municipalityId }
+        municipality: { id: personaFormData.municipalityId },
       }
 
-      // Actualizar contactos si hay teléfonos adicionales
-      if (personaFormData.phones && personaFormData.phones.length > 0) {
-        try {
-          await fetch('/api/business-partner/contacts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              businessPartnerId: personaFormData._raw.businessPartner.id,
-              phones: personaFormData.phones.map((phone: PhoneContact) => ({
-                phone: phone.phone,
-                firstName: '',
-                lastName: '',
-                is_active: phone.is_active !== undefined ? phone.is_active : true
-              }))
-            })
-          })
-        } catch (contactsError) {
-          console.warn('Error actualizando contactos:', contactsError)
+      // ======== 1️⃣  Procesar contactos ========
+      const currentPhones: any[] = personaFormData.phones || []
+      const created: any[] = []
+      const updated: any[] = []
+      const deleted: any[] = []
+
+      // Detectar nuevos y modificados
+      for (const p of currentPhones) {
+        const original = phonesOriginal.find(o => o.id === p.id)
+
+        if (!original) {
+          created.push(p)
+        } else if (original.phone !== p.phone || original.isActive !== p.isActive) {
+          updated.push(p)
         }
       }
 
+      // Detectar eliminados
+      for (const o of phonesOriginal) {
+        if (!currentPhones.find(p => p.id === o.id)) {
+          deleted.push(o)
+        }
+      }
+
+      const contactOps: Promise<any>[] = []
+      const businessPartner = personaFormData._raw.businessPartner
+
+      // ➕ Crear nuevos
+      for (const c of created) {
+        const now = new Date().toISOString()
+
+        const contactPayload = {
+          firstName: personaFormData.nombres,
+          lastName: personaFormData.apellidos,
+          phone: c.phone,
+          isActive: c.is_active ?? true,
+          birthDate: now.split('T')[0],
+          createdAt: now,
+          updatedAt: now,
+          businessPartner,
+        }
+
+        contactOps.push(
+          fetch('/api/business-partner/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessPartnerId: businessPartner.id,
+              phones: [contactPayload],
+            }),
+          })
+        )
+      }
+
+      // ✏️ Actualizar existentes
+      for (const u of updated) {
+        const original = phonesOriginal.find(o => o.id === u.id)
+
+        if (!original) continue
+
+        const contactPayload = {
+          id: u.id,
+          firstName: personaFormData.nombres,
+          lastName: personaFormData.apellidos,
+          phone: u.phone,
+          isActive: u.is_active ?? true,
+          birthDate: personaFormData.fechaNacimiento ?? '2025-10-07', // o el campo real si existe
+          businessPartner: { id: personaFormData._raw.businessPartner.id },
+        }
+
+        console.log('Body final de actualización:', contactPayload)
+
+        contactOps.push(
+          fetch('/api/business-partner/contacts', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(contactPayload),
+          })
+        )
+      }
+
+
+      // ❌ Eliminar removidos
+      for (const d of deleted) {
+        contactOps.push(fetch(`/api/business-partner/contacts?id=${d.id}`, { method: 'DELETE' }))
+      }
+
+      await Promise.all(contactOps)
+
+      // ======== 2️⃣  Actualizar dirección + partner ========
       const res = await fetch(`/api/business-partner/personas/${partnerId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
 
       const data = await res.json()
@@ -96,96 +160,74 @@ const StepperEditarPersona = () => {
       showAlert('success', 'PERSONA ACTUALIZADA CON ÉXITO')
       router.push('/personas')
     } catch (err) {
-      console.error(err)
+      console.error('❌ Error en handleSave:', err)
       showAlert('error', 'ERROR INTERNO AL ACTUALIZAR PERSONA')
     } finally {
       finEspera()
     }
   }
 
-  // FUNCION PARA OBTENER LOS DATOS DESDE EL BACKEND Y MAPEARLOS AL FORMATO DEL FORMULARIO
+  // ========================== CARGAR PERSONA ==========================
   const fetchPersona = async () => {
     try {
       esperar()
-
       const res = await fetch(`/api/business-partner/personas/${partnerId}`)
       const data = await res.json()
 
       if (!res.ok) {
         showAlert('error', data?.message || 'NO SE PUDO OBTENER LA PERSONA')
+        
         router.push('/personas')
 
         return
       }
 
-      const address = data[0]
+      const address = Array.isArray(data.address) ? data.address[0] : data.address
+      const phone = data.phone || []
 
-      // NORMALIZAMOS LOS DATOS DE PERSONA Y DIRECCION PARA LOS STEPS
       setPersonaFormData({
-        // DATOS DE PERSONA
-        nombres: address.businessPartner.name?.split(' ')[0] ?? '',
-        apellidos: address.businessPartner.name?.split(' ').slice(1).join(' ') ?? '',
-        dpi: address.businessPartner.taxId ?? '', // Comentado para futuro
+        nombres: address.businessPartner?.name?.split(' ')[0] ?? '',
+        apellidos: address.businessPartner?.name?.split(' ').slice(1).join(' ') ?? '',
+        dpi: address.businessPartner?.taxId ?? '',
         telefono: '',
-        telefonoPrincipal: '',
-        correo: address.businessPartner.email ?? '',
-        phones: [], // Inicialmente vacío, se cargará después
-
-        // DATOS DE DIRECCION
+        telefonoPrincipal: phone.length > 0 ? phone[0].phone : '',
+        correo: address.businessPartner?.email ?? '',
+        phones: phone.map((p: any) => ({
+          id: p.id,
+          phone: p.phone,
+          is_active: p.isActive ?? true,
+        })),
         calle: address.street ?? '',
         numero: address.street2 ?? '',
         zona: address.postalCode ?? '',
         colonia: address.neighborhood ?? '',
-        referencia: address.businessPartner.notes ?? '',
-        ciudad: '',
-        estado: '',
+        referencia: address.businessPartner?.notes ?? '',
         countryId: address.municipality?.departments?.country?.id,
         departmentId: address.municipality?.departments?.id,
         municipalityId: address.municipality?.id,
-
-        // OBJETO CRUDO PARA RECONSTRUIR EN EL SAVE
-        _raw: address
+        _raw: address,
       })
 
-      // Cargar contactos adicionales después de establecer los datos básicos
-      try {
-        const contactsRes = await fetch(`/api/business-partner/contacts?businessPartnerId=${address.businessPartner.id}`)
-
-        if (contactsRes.ok) {
-          const contactsData = await contactsRes.json()
-
-          if (contactsData.contacts && contactsData.contacts.length > 0) {
-
-            setPersonaFormData((prev: any) => ({
-              ...prev,
-              phones: contactsData.contacts.map((contact: any) => ({
-                id: contact.id,
-                phone: contact.phone,
-                is_active: contact.is_active
-              }))
-            }))
-          }
-        }
-      } catch (contactsError) {
-        console.warn('Error cargando contactos:', contactsError)
-      }
+      // Guardamos copia completa para comparar después
+      setPhonesOriginal(
+        phone.map((p: any) => ({
+          ...p, // incluye firstName, lastName, birthDate, createdAt, updatedAt, businessPartner, etc.
+          isActive: p.isActive ?? true,
+        }))
+      )
     } catch (err) {
-      console.error(err)
+      console.error('❌ Error en fetchPersona:', err)
       showAlert('error', 'ERROR CARGANDO DATOS DE PERSONA')
     } finally {
       finEspera()
     }
   }
 
-  // USEEFFECT PARA EJECUTAR EL FETCH AL MONTAR EL COMPONENTE
   useEffect(() => {
     if (partnerId) fetchPersona()
   }, [partnerId])
 
-  // SI NO TENEMOS FORM DATA RETORNAMOS NULL PARA EVITAR ERRORES
-  if (!personaFormData) {
-    return null
-  }
+  if (!personaFormData) return null
 
   return (
     <div className="p-6">
@@ -210,7 +252,6 @@ const StepperEditarPersona = () => {
             handleCancel={handleCancel}
           />
         )}
-
         {activeStep === 1 && (
           <StepPersonaDireccion
             formData={personaFormData}

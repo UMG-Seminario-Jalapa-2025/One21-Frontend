@@ -43,7 +43,7 @@ function getCategoryIdFromQuery(req: NextRequest) {
 
 // Helper function to delete category
 async function deleteCategory(baseUrl: string, token: string, categoryId: string) {
-  return await fetch(`${baseUrl}ticket/categories/${categoryId}`, {
+  return await fetch(`${baseUrl}categories/${categoryId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
