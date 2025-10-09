@@ -69,7 +69,7 @@ function preparePriorityData(body: any) {
 
 // Helper function to create priority
 async function createPriority(baseUrl: string, token: string, priorityData: any) {
-  return await fetch(`${baseUrl}ticket/priorities`, {
+  return await fetch(`${baseUrl}priorities`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
