@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
@@ -8,14 +8,44 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
 // ================= PUT /api/empleados/:id =================
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const cookieStore = await cookies()
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+    
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
 
-    if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
 
     const payload = await req.json()
 
@@ -30,28 +60,47 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       cache: 'no-store'
     })
 
-    if (res.status === 204) return NextResponse.json({ ok: true }, { status: 200 })
+    if (res.status === 204) {
+      return NextResponse.json({ ok: true, message: 'Empleado actualizado con éxito' }, { status: 200 })
+    }
 
-    const data = await res.json().catch(() => ({}))
+    const data = await parseResponse(res)
 
-    if (!res.ok) return NextResponse.json(data, { status: res.status })
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          step: 'employee_update',
+          error: data?.error || 'employee_update_error',
+          message: data?.detail || data?.message || 'Error al actualizar empleado'
+        },
+        { status: res.status }
+      )
+    }
 
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    console.error('❌ Error en PUT /api/empleados/[id]:', err)
+    console.error('Error en PUT /api/empleados/[id]:', err)
 
-    return NextResponse.json({ message: 'Error interno al actualizar empleado' }, { status: 500 })
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
 
 // ================= PATCH /api/empleados/:id =================
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const cookieStore = await cookies() // 👈 También aquí
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+    
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
 
-    if (!token) return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
 
     const payload = await req.json()
 
@@ -66,16 +115,30 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       cache: 'no-store'
     })
 
-    if (res.status === 204) return NextResponse.json({ ok: true }, { status: 200 })
+    if (res.status === 204) {
+      return NextResponse.json({ ok: true, message: 'Estado actualizado con éxito' }, { status: 200 })
+    }
 
-    const data = await res.json().catch(() => ({}))
+    const data = await parseResponse(res)
 
-    if (!res.ok) return NextResponse.json(data, { status: res.status })
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          step: 'employee_status_update',
+          error: data?.error || 'employee_status_error',
+          message: data?.detail || data?.message || 'Error al cambiar estado del empleado'
+        },
+        { status: res.status }
+      )
+    }
 
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    console.error('❌ Error en PATCH /api/empleados/[id]:', err)
+    console.error('Error en PATCH /api/empleados/[id]:', err)
 
-    return NextResponse.json({ message: 'Error interno al cambiar estado del empleado' }, { status: 500 })
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }

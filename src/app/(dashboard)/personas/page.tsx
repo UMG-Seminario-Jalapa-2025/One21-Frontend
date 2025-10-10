@@ -281,7 +281,7 @@ export default function PersonasPage() {
     window.location.href = `/personas/editar/${persona.id}`
   }
 
-  
+
 
   const columns = useMemo(
     () => [
@@ -301,7 +301,7 @@ export default function PersonasPage() {
           return (
             <div className='flex gap-2 justify-center'>
               {!persona.isCustomer && (
-                <Tooltip title='Hacer usuario'>
+                <Tooltip title='Hacer cliente'>
                   <IconButton color='primary' size='small' onClick={() => handleCrearUsuario(persona)}>
                     <i className='tabler-user-plus' />
                   </IconButton>
@@ -337,11 +337,11 @@ export default function PersonasPage() {
                 </IconButton>
               </Tooltip>
 
-              <Tooltip title="Eliminar">
+              {/* <Tooltip title="Eliminar">
                 <IconButton color="error" size="small" onClick={() => setConfirmDialog({ open: true, persona })}>
                   <i className="tabler-trash-off" />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           )
         }

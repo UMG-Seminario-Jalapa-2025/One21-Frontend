@@ -245,7 +245,7 @@ export default function PrioridadesPage() {
                                 </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Eliminar">
+                            {/* <Tooltip title="Eliminar">
                                 <IconButton
                                     color="error"
                                     size="small"
@@ -253,7 +253,7 @@ export default function PrioridadesPage() {
                                 >
                                     <i className="tabler-trash" />
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip> */}
                         </div>
                     )
                 }

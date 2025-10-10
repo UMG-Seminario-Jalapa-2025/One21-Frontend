@@ -262,7 +262,7 @@ export default function CategoriasPage() {
                                 </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Eliminar">
+                            {/* <Tooltip title="Eliminar">
                                 <IconButton
                                     color="error"
                                     size="small"
@@ -270,7 +270,7 @@ export default function CategoriasPage() {
                                 >
                                     <i className="tabler-trash" />
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip> */}
                         </div>
                     )
                 }

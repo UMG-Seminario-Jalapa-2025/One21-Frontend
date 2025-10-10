@@ -1,16 +1,45 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
 
-export async function POST(req: Request) {
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const cookieStore = await cookies()
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
 
-    if (!token)
-      return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
+
+    const body = await req.json()
 
     const res = await fetch(`${baseUrl}/employees/job-position`, {
       method: 'POST',
@@ -23,21 +52,29 @@ export async function POST(req: Request) {
 
     // Algunos controladores devuelven 204 sin cuerpo
     if (res.status === 204) {
-      return NextResponse.json({ message: 'Puesto creado con éxito' }, { status: 204 })
+      return NextResponse.json({ message: 'Puesto creado con éxito' }, { status: 201 })
     }
 
-    let data = null
+    const data = await parseResponse(res)
 
-    try {
-      data = await res.json()
-    } catch {
-      data = { message: 'Puesto creado con éxito' }
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          step: 'job_position_create',
+          error: data?.error || 'job_position_create_error',
+          message: data?.detail || data?.message || 'Error al crear puesto'
+        },
+        { status: res.status }
+      )
     }
 
-    return NextResponse.json(data, { status: res.status })
+    return NextResponse.json({ message: 'Puesto creado con éxito', data }, { status: 201 })
   } catch (err) {
-    console.error('❌ Error POST /employee_positions/create:', err)
+    console.error('Error POST /employee_positions/create:', err)
 
-    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }

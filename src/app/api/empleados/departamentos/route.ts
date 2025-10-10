@@ -1,49 +1,90 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
 
-export async function GET() {
-  try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
 
-    if (!token) {
-      return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
+
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
     }
+
+    const token = tokenResult
 
     const res = await fetch(`${baseUrl}employees/departments`, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
     })
+
+    const data = await parseResponse(res)
 
     if (!res.ok) {
       return NextResponse.json(
-        { step: 'departments_get', message: 'Error al obtener departamentos' },
+        {
+          step: 'departments_get',
+          error: data?.error || 'departments_error',
+          message: data?.detail || data?.message || 'Error al obtener departamentos'
+        },
         { status: res.status }
       )
     }
 
-    const data = await res.json()
-
-    return NextResponse.json(data)
+    return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    return NextResponse.json({ step: 'server', message: 'Error interno' }, { status: 500 })
+    console.error('Error en /api/empleados/departamentos:', err)
+
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
+
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
+
     const body = await req.json()
 
     console.log('Body recibido en POST /api/departamentos:', body)
-
-    const cookieStore = await cookies()
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
-
-    if (!token) {
-      return NextResponse.json({ step: 'auth', message: 'Token no encontrado' }, { status: 401 })
-    }
 
     const payload = {
       code: body.code,
@@ -59,7 +100,7 @@ export async function POST(req: Request) {
       updatedAt: body.updatedAt
     }
 
-    const res = await fetch(`${baseUrl}empployees/departments`, {
+    const res = await fetch(`${baseUrl}employees/departments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,11 +109,15 @@ export async function POST(req: Request) {
       body: JSON.stringify(payload)
     })
 
-    const data = await res.json()
+    const data = await parseResponse(res)
 
     if (!res.ok) {
       return NextResponse.json(
-        { step: 'department_create', message: data?.message || 'Error al crear departamento' },
+        {
+          step: 'department_create',
+          error: data?.error || 'department_create_error',
+          message: data?.detail || data?.message || 'Error al crear departamento'
+        },
         { status: res.status }
       )
     }
@@ -88,6 +133,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json(mapped, { status: 201 })
   } catch (err) {
-    return NextResponse.json({ step: 'server', message: 'Error interno' }, { status: 500 })
+    console.error('Error en /api/empleados/departamentos POST:', err)
+
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }

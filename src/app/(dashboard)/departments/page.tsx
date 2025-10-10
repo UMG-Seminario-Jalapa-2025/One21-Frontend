@@ -51,7 +51,7 @@ export default function DepartmentsPage() {
   })
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteId] = useState<number | null>(null)
   const { esperar, finEspera } = useLoading()
 
   const fetchData = async () => {
@@ -148,7 +148,7 @@ export default function DepartmentsPage() {
                   </IconButton>
                 </Link>
               </Tooltip>
-              <Tooltip title='Eliminar'>
+              {/* <Tooltip title='Eliminar'>
                 <IconButton
                   color='error'
                   size='small'
@@ -159,7 +159,7 @@ export default function DepartmentsPage() {
                 >
                   <i className='tabler-trash-off' />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           )
         }
