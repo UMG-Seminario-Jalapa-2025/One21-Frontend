@@ -37,13 +37,49 @@ const StepperCrearPersona = () => {
     zona: '',
     colonia: '',
     referencia: '',
-    ciudad: '',
     estado: '',
     municipalityId: null,
     phones: [], // Para contactos adicionales
   })
 
-  const handleNext = () => setActiveStep(prev => prev + 1)
+  // ✅ Validación de campos antes de continuar o guardar
+  const validarCampos = (etapa: number) => {
+    if (etapa === 0) {
+      // Validar datos personales
+      const requeridos = ['nombres', 'apellidos', 'telefonoPrincipal', 'correo']
+
+      for (const campo of requeridos) {
+
+        if (!personaFormData[campo] || personaFormData[campo].toString().trim() === '') {
+          showAlert('error', `El campo "${campo}" es obligatorio.`)
+
+          return false
+        }
+      }
+    }
+
+    if (etapa === 1) {
+      // Validar dirección
+      const requeridosDireccion = ['calle', 'numero', 'zona', 'colonia', 'referencia', 'municipalityId']
+
+      for (const campo of requeridosDireccion) {
+
+        if (!personaFormData[campo] || personaFormData[campo].toString().trim() === '') {
+          showAlert('error', `El campo "${campo}" es obligatorio.`)
+
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
+  const handleNext = () => {
+    if (!validarCampos(activeStep)) return
+    setActiveStep(prev => prev + 1)
+  }
+
   const handlePrev = () => setActiveStep(prev => prev - 1)
 
   const handleCancel = () => {
@@ -51,6 +87,8 @@ const StepperCrearPersona = () => {
   }
 
   const handleSave = async () => {
+    if (!validarCampos(activeStep)) return
+
     try {
       esperar()
 

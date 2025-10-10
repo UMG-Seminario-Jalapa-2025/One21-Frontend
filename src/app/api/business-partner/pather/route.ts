@@ -2,6 +2,19 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 
+// 🔹 Función para generar un UID único para el partner
+function generatePartnerUID(nombres?: string, apellidos?: string): string {
+  const prefix = 'PA' // prefijo fijo para Partner
+
+  const initials =
+    ((nombres?.substring(0, 2) || '') + (apellidos?.substring(0, 1) || '')).toUpperCase()
+
+    const timestamp = Date.now().toString().slice(-5) // últimos 5 dígitos del timestamp
+  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase()
+
+  return `${prefix}-${timestamp}-${initials}${randomPart}`
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -15,12 +28,8 @@ export async function POST(req: NextRequest) {
 
     const token = tokenCookie.value
 
-
-    // Generar code → "on" + primeras 3 letras del nombre + apellido
-    const code =
-      'on' +
-      (body.nombres?.substring(0, 3) || '').toLowerCase() +
-      (body.apellidos || '')
+    // 🔹 Generar UID único para el partner
+    const code = generatePartnerUID(body.nombres, body.apellidos)
 
     const partnerPayload = {
       code,
@@ -35,6 +44,7 @@ export async function POST(req: NextRequest) {
       created_by: 1
     }
 
+    // === Paso 1: Crear Partner ===
     const partnerRes = await fetch(`${baseUrlTemp}partners/partners`, {
       method: 'POST',
       headers: {
@@ -82,7 +92,7 @@ export async function POST(req: NextRequest) {
       postalCode: body.zona,
       isDefault: 1,
       isActive: 1,
-      municipality: { id: body.municipalityId },
+      municipality: { id: body.municipalityId }
     }
 
     const addressRes = await fetch(`${baseUrlTemp}partners/addresses`, {
@@ -139,16 +149,16 @@ export async function POST(req: NextRequest) {
         birthDate: now.split('T')[0], // fecha simple YYYY-MM-DD
         createdAt: now,
         updatedAt: now,
-        businessPartner: { id: partnerId },
+        businessPartner: { id: partnerId }
       }
 
       const contactRes = await fetch(`${baseUrlTemp}partners/contacts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(contactPayload),
+        body: JSON.stringify(contactPayload)
       })
 
       const contactContentType = contactRes.headers.get('content-type')
@@ -174,7 +184,7 @@ export async function POST(req: NextRequest) {
         message: 'Persona creada con éxito',
         partner: partnerData,
         address: addressData,
-        contacts: contactsCreated,
+        contacts: contactsCreated
       },
       { status: 201 }
     )
