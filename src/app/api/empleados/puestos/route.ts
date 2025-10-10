@@ -28,7 +28,7 @@ function getTokenFromCookies(req: NextRequest) {
 
 // Helper function to fetch job positions
 async function fetchJobPositions(baseUrl: string, token: string) {
-  return await fetch(`${baseUrl}/employees/job-position`, {
+  return await fetch(`${baseUrl}/job-position`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, context: any): Promise<NextRespons
 
     const { status } = await req.json()
 
-    const res = await fetch(`${baseUrl}/employees/${id}/status`, {
+    const res = await fetch(`${baseUrl}/${id}/status`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,

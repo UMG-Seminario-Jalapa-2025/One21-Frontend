@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}employees/departments/${id}`, {
+    const res = await fetch(`${baseUrl}/departments/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
