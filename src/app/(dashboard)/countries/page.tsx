@@ -53,7 +53,7 @@ export default function CountriesPage() {
   })
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteId] = useState<number | null>(null)
 
   const { esperar, finEspera } = useLoading()
 
@@ -121,7 +121,7 @@ export default function CountriesPage() {
                   </IconButton>
                 </Link>
               </Tooltip>
-              <Tooltip title="Eliminar">
+              {/* <Tooltip title="Eliminar">
                 <IconButton
                   color="error"
                   size="small"
@@ -132,7 +132,7 @@ export default function CountriesPage() {
                 >
                   <i className="tabler-trash-off" />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           )
         }

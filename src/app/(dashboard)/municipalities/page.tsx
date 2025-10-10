@@ -49,7 +49,7 @@ export default function MunicipalitiesPage() {
   })
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteId] = useState<number | null>(null)
   const { esperar, finEspera } = useLoading()
 
   const pickDeptId = (m: MunicipalityRaw): number | null => {
@@ -177,7 +177,7 @@ export default function MunicipalitiesPage() {
                   </IconButton>
                 </Link>
               </Tooltip>
-              <Tooltip title='Eliminar'>
+              {/* <Tooltip title='Eliminar'>
                 <IconButton
                   color='error'
                   size='small'
@@ -188,7 +188,7 @@ export default function MunicipalitiesPage() {
                 >
                   <i className='tabler-trash-off' />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           )
         }
