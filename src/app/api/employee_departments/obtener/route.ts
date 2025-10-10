@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}/employees/departments`, {
+    const res = await fetch(`${baseUrl}/departments`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
