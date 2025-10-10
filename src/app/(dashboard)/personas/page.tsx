@@ -142,6 +142,7 @@ export default function PersonasPage() {
 
       // === Asignar rol en Keycloak ===
       if (payload.email) {
+        console.log("Si entro");
         asignarRol(payload.email, ['employee'])
       }
 
