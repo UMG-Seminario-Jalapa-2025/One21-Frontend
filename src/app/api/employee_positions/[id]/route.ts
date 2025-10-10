@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}/employees/job-position/${params.id}`, {
+    const res = await fetch(`${baseUrl}/job-position/${params.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

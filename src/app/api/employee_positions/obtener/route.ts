@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}/employees/job-position`, {
+    const res = await fetch(`${baseUrl}/job-position`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

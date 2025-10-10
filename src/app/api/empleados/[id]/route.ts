@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const payload = await req.json()
 
-    const res = await fetch(`${baseUrl}/employees/${id}`, {
+    const res = await fetch(`${baseUrl}/${id}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
