@@ -115,7 +115,7 @@ export default function PersonasPage() {
         employeeNumber: payload.employee_number,
         businessPartnerId: payload.businessPartner.id,
         hireDate: payload.hire_date,
-        employeeDepartment: payload.employeeDepartment?.id ? { id: payload.employeeDepartment.id } : null,
+        departments: payload.departments?.id ? { id: payload.departments.id } : null,
         jobPosition: payload.jobPosition?.id ? { id: payload.jobPosition.id } : null,
         positionTitle: payload.position_title || null,
         managerEmployee: payload.managerEmployee?.id ? { id: payload.managerEmployee.id } : null,
@@ -125,7 +125,7 @@ export default function PersonasPage() {
         keycloakUserId: payload.keycloak_user_id || null
       }
 
-      console.log('🧪 Payload FINAL a enviar:', JSON.stringify(transformedPayload, null, 2))
+      // console.log('Payload FINAL a enviar:', JSON.stringify(transformedPayload, null, 2))
 
       const res = await fetch('/api/empleados/crear', {
         method: 'POST',
@@ -149,7 +149,7 @@ export default function PersonasPage() {
       setOpenModalEmpleado(false)
       await fetchData()
     } catch (err: any) {
-      console.error('❌ Error creando empleado:', err)
+      console.error('Error creando empleado:', err)
       showAlert('error', err.message || 'Error al crear empleado')
     }
   }

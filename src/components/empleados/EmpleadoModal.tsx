@@ -20,7 +20,7 @@ export type EmpleadoPayload = {
   employee_number: string
   businessPartner: { id: number }
   hire_date: string
-  employeeDepartment?: { id: number } | null
+  departments?: { id: number } | null
   jobPosition?: { id: number } | null
   position_title?: string | null
   managerEmployee?: { id: number } | null
@@ -46,7 +46,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
     employee_number: '',
     businessPartner: { id: 0 },
     hire_date: hoyISO(),
-    employeeDepartment: null,
+    departments: null,
     jobPosition: null,
     position_title: '',
     managerEmployee: null,
@@ -58,7 +58,8 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
 
   const [departamentos, setDepartamentos] = useState<any[]>([])
   const [puestos, setPuestos] = useState<any[]>([])
-  const [jefes, setJefes] = useState<any[]>([]) // aseguramos array
+
+  // const [jefes, setJefes] = useState<any[]>([])
 
   // Actualiza datos obligatorios al recibir persona
   useEffect(() => {
@@ -72,7 +73,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
   }, [persona])
 
   useEffect(() => {
-    fetch('/api/empleados/departamentos')
+    fetch('/api/employee_departments/obtener')
       .then(res => res.json())
       .then(data => Array.isArray(data) ? setDepartamentos(data) : setDepartamentos([]))
 
@@ -80,12 +81,11 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
       .then(res => res.json())
       .then(data => Array.isArray(data) ? setPuestos(data) : setPuestos([]))
 
-    fetch('/api/empleados/jefes')
-      .then(res => res.json())
-      .then(data => {
-        console.log('🧪 jefes data:', data)
-        setJefes(Array.isArray(data) ? data : []) // 👈 aseguramos array
-      })
+    // fetch('/api/empleados/jefes')
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     setJefes(Array.isArray(data) ? data : [])
+    //   })
   }, [])
 
   const handleChange = (field: keyof EmpleadoPayload, value: any) => {
@@ -129,8 +129,8 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
             <FormControl fullWidth>
               <InputLabel>Departamento</InputLabel>
               <Select
-                value={formData.employeeDepartment?.id || ''}
-                onChange={e => handleChange('employeeDepartment', { id: Number(e.target.value) })}
+                value={formData.departments?.id || ''}
+                onChange={e => handleChange('departments', { id: Number(e.target.value) })}
                 label='Departamento'
               >
                 {departamentos.map(dep => (
@@ -168,7 +168,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
             />
           </Grid>
 
-          <Grid item xs={6}>
+          {/* <Grid item xs={6}>
             <FormControl fullWidth>
               <InputLabel>Jefe directo</InputLabel>
               <Select
@@ -188,7 +188,7 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={6}>
             <TextField
