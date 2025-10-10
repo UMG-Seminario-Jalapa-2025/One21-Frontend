@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    const res = await fetch(`${baseUrl}`, {
+    const res = await fetch(`${baseUrl}/employees`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
