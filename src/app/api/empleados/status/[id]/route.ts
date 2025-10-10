@@ -1,24 +1,48 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
-export async function PATCH(req: Request, context: any): Promise<NextResponse> {
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function PATCH(req: NextRequest, context: any): Promise<NextResponse> {
   try {
     const { id } = context.params
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
 
-    const EMPLOYEE_BASE_URL =
-      process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
 
-    const cookieStore = await cookies()
-    const tokenCookie = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
-
-    if (!tokenCookie?.value) {
-      return NextResponse.json({ message: 'Token no encontrado' }, { status: 401 })
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
     }
 
-    const token = tokenCookie.value
+    const token = tokenResult
+
     const { status } = await req.json()
 
-    const res = await fetch(`${EMPLOYEE_BASE_URL}/employees/${id}/status`, {
+    const res = await fetch(`${baseUrl}/employees/${id}/status`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -27,25 +51,27 @@ export async function PATCH(req: Request, context: any): Promise<NextResponse> {
       body: JSON.stringify({ status })
     })
 
+    const data = await parseResponse(res)
+
     if (!res.ok) {
-      const msg = await res.text()
-      
-      console.error(`❌ Backend devolvió error: ${res.status} - ${msg}`)
+      console.error(`Backend devolvió error: ${res.status} - ${JSON.stringify(data)}`)
 
       return NextResponse.json(
-        { message: msg || 'Error al actualizar status' },
+        {
+          step: 'employee_status_update',
+          error: data?.error || 'status_update_error',
+          message: data?.detail || data?.message || 'Error al actualizar status'
+        },
         { status: res.status }
       )
     }
 
-    const data = await res.json()
-
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    console.error('❌ Error en /api/empleados/status/[id]:', err)
+    console.error('Error en /api/empleados/status/[id]:', err)
 
     return NextResponse.json(
-      { message: 'Error interno al actualizar status' },
+      { step: 'server', message: 'Error interno del servidor' },
       { status: 500 }
     )
   }

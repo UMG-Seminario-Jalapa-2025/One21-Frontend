@@ -1,16 +1,43 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
 
-export async function GET() {
-  try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')?.value
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
 
-    if (!token) {
-      return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
+
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
     }
+
+    const token = tokenResult
 
     const res = await fetch(`${baseUrl}/employees/departments`, {
       method: 'GET',
@@ -20,21 +47,26 @@ export async function GET() {
       }
     })
 
-    if (!res.ok) {
-      const errorText = await res.text()
+    const data = await parseResponse(res)
 
+    if (!res.ok) {
       return NextResponse.json(
-        { step: 'department_get', message: 'Error al obtener departamentos', backend: errorText },
+        {
+          step: 'department_get',
+          error: data?.error || 'departments_error',
+          message: data?.detail || data?.message || 'Error al obtener departamentos'
+        },
         { status: res.status }
       )
     }
 
-    const data = await res.json()
-
     return NextResponse.json(data, { status: 200 })
   } catch (err) {
-    console.error('❌ Error en /api/employee_departments/obtener:', err)
+    console.error('Error en /api/employee_departments/obtener:', err)
 
-    return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
