@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField'
 
 import CustomTextField from '@core/components/mui/TextField'
 import { useLoading } from '@/components/ui/LoadingModal'
+import { showAlert } from '@/components/ui/AlertProvider' // ✅ se agrega para mostrar mensajes
 
 type Country = { id: number; name: string }
 type Department = { id: number; name: string; country: Country }
@@ -25,7 +26,6 @@ type StepPersonaDireccionProps = {
     zona: string
     colonia: string
     referencia: string
-    ciudad: string
     estado: string
     countryId?: number
     departmentId?: number
@@ -39,8 +39,6 @@ type StepPersonaDireccionProps = {
       zona: string
       colonia: string
       referencia: string
-      ciudad: string
-      estado: string
       countryId?: number
       departmentId?: number
       municipalityId?: number
@@ -61,6 +59,36 @@ const StepPersonaDireccion = ({
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
 
   const { esperar, finEspera } = useLoading()
+
+  // ✅ función para validar campos antes de guardar
+  const validarDireccion = () => {
+    const requeridos = [
+      'countryId',
+      'departmentId',
+      'municipalityId',
+      'calle',
+      'numero',
+      'zona',
+      'colonia',
+      'referencia'
+    ]
+
+    for (const campo of requeridos) {
+      if (!formData[campo] || formData[campo].toString().trim() === '') {
+        showAlert('error', `El campo "${campo}" es obligatorio.`)
+
+        return false
+      }
+    }
+
+    return true
+  }
+
+  // 🔹 interceptar el click en Guardar para validar antes
+  const handleGuardarClick = () => {
+    if (!validarDireccion()) return
+    handleSave()
+  }
 
   // cargar TODA la data de una vez
   useEffect(() => {
@@ -102,7 +130,6 @@ const StepPersonaDireccion = ({
 
   // filtrar municipios por departamento
   const filteredMunicipalities = useMemo(() => {
-
     console.log(formData.departmentId)
 
     if (!formData.departmentId) return []
@@ -244,7 +271,8 @@ const StepPersonaDireccion = ({
             <Button variant="outlined" onClick={handlePrev}>
               Anterior
             </Button>
-            <Button variant="contained" color="primary" onClick={handleSave}>
+            {/* 🔹 Validación antes de guardar */}
+            <Button variant="contained" color="primary" onClick={handleGuardarClick}>
               Guardar
             </Button>
           </div>
