@@ -18,7 +18,7 @@ import {
 
 export type EmpleadoPayload = {
   employee_number: string
-  businessPartner: { id: number }
+  businessPartner: { id: number; email: string }
   hire_date: string
   departments?: { id: number } | null
   jobPosition?: { id: number } | null
@@ -35,7 +35,7 @@ export type EmpleadoPayload = {
 type Props = {
   open: boolean
   onClose: () => void
-  persona?: { id: number; code: string; name: string }
+  persona?: { id: number; code: string; name: string; email: string }
   onSubmit: (payload: EmpleadoPayload) => void
 }
 
@@ -44,7 +44,7 @@ const hoyISO = () => new Date().toISOString().slice(0, 10)
 const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
   const [formData, setFormData] = useState<EmpleadoPayload>({
     employee_number: '',
-    businessPartner: { id: 0 },
+    businessPartner: { id: 0, email: '' },
     hire_date: hoyISO(),
     departments: null,
     jobPosition: null,
@@ -67,7 +67,8 @@ const EmpleadoModal = ({ open, onClose, persona, onSubmit }: Props) => {
       setFormData(prev => ({
         ...prev,
         employee_number: persona.code,
-        businessPartner: { id: persona.id }
+        businessPartner: { id: persona.id, email: persona.email}
+
       }))
     }
   }, [persona])
