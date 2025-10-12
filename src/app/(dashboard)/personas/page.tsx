@@ -110,7 +110,7 @@ export default function PersonasPage() {
         return
       }
 
-      // Payload adaptado al backend (según Swagger)
+      // Payload adaptado al backend 
       const transformedPayload = {
         employeeNumber: payload.employee_number,
         businessPartnerId: payload.businessPartner.id,
@@ -141,9 +141,8 @@ export default function PersonasPage() {
       await handleActualizarPartner({ partnerId: payload.businessPartner.id, isEmployee: true })
 
       // === Asignar rol en Keycloak ===
-      if (payload.email) {
-        console.log("Si entro");
-        asignarRol(payload.email, ['employee'])
+      if (payload.businessPartner.email) {
+        asignarRol(payload.businessPartner.email, ['employee'])
       }
 
       showAlert('success', 'Empleado creado con éxito')
