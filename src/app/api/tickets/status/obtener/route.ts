@@ -23,9 +23,9 @@ function getTokenFromCookies(req: NextRequest) {
 }
 
 async function fetchStatuses(baseUrl: string, token: string) {
-  console.log('URL completa:', `${baseUrl}tickets/ticket/statuses`)
+  console.log('URL completa:', `${baseUrl}statuses`)
 
-  return await fetch(`${baseUrl}tickets/ticket/statuses`, {
+  return await fetch(`${baseUrl}statuses`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   try {
     console.log('Iniciando obtención de estados...')
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8081/'
+    const baseUrl = process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/'
 
     console.log('Base URL:', baseUrl)
 

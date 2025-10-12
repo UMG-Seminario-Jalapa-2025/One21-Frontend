@@ -34,9 +34,9 @@ function getStatusIdFromQuery(req: NextRequest) {
 }
 
 async function deleteStatus(baseUrl: string, token: string, statusId: string) {
-  console.log('URL completa:', `${baseUrl}tickets/ticket/statuses/${statusId}`)
+  console.log('URL completa:', `${baseUrl}statuses/${statusId}`)
 
-  return await fetch(`${baseUrl}tickets/ticket/statuses/${statusId}`, {
+  return await fetch(`${baseUrl}statuses/${statusId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ export async function DELETE(req: NextRequest) {
   try {
     console.log('Iniciando eliminación de estado...')
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8081/'
+    const baseUrl = process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/'
 
     console.log('Base URL:', baseUrl)
 

@@ -59,10 +59,10 @@ function prepareStatusData(body: any) {
 }
 
 async function updateStatus(baseUrl: string, token: string, statusData: any) {
-  console.log('RL completa:', `${baseUrl}tickets/ticket/statuses`)
+  console.log('RL completa:', `${baseUrl}statuses`)
   console.log('Datos enviados:', statusData)
 
-  return await fetch(`${baseUrl}tickets/ticket/statuses`, {
+  return await fetch(`${baseUrl}statuses`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export async function PUT(req: NextRequest) {
   try {
     console.log('Iniciando edición de estado...')
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8081/'
+    const baseUrl = process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/'
 
     console.log('Base URL:', baseUrl)
 

@@ -200,18 +200,19 @@ export default function StatusPage() {
     () => [
       columnHelper.accessor('code', { header: 'Código' }),
       columnHelper.accessor('name', { header: 'Nombre' }),
-      columnHelper.accessor('isFinal', {
-        header: '¿Final?',
-        cell: info => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              info.getValue() ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            {info.getValue() ? 'Sí' : 'No'}
-          </span>
-        )
-      }),
+      
+      // columnHelper.accessor('isFinal', {
+      //   header: '¿Final?',
+      //   cell: info => (
+      //     <span
+      //       className={`px-2 py-1 rounded-full text-xs font-medium ${
+      //         info.getValue() ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+      //       }`}
+      //     >
+      //       {info.getValue() ? 'Sí' : 'No'}
+      //     </span>
+      //   )
+      // }),
       columnHelper.accessor('isActive', {
         header: 'Estado',
         cell: info => (

@@ -82,24 +82,7 @@ export default function MunicipalitiesPage() {
 
       setDepartmentsMap(dmap)
 
-      // 🔥 FIX: Hacer fetch individual de cada municipio para obtener el departamento
-      const detailedMunicipalities = await Promise.all(
-        munData.map(async m => {
-          try {
-            const res = await fetch(`/api/business-partner/municipality/${m.id}`)
-
-            if (res.ok) {
-              return await res.json()
-            }
-
-            return m
-          } catch {
-            return m
-          }
-        })
-      )
-
-      const normalized: MunicipalityNorm[] = detailedMunicipalities.map(m => {
+      const normalized: MunicipalityNorm[] = munData.map(m => {
         const deptId = pickDeptId(m)
 
         return {
