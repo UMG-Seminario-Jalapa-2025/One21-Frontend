@@ -1,6 +1,5 @@
 'use client'
 
-// React Imports
 import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
@@ -9,6 +8,8 @@ import CardHeader from '@mui/material/CardHeader'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
 
 // Third-party Imports
 import {
@@ -18,12 +19,11 @@ import {
   createColumnHelper
 } from '@tanstack/react-table'
 
-// Style Imports
+// Styles
 import styles from '@core/styles/table.module.css'
 
-import { useLoading } from "@/components/ui/LoadingModal"
-
-// import { showAlert } from "@/components/ui/AlertProvider"
+// Custom Hooks
+import { useLoading } from '@/components/ui/LoadingModal'
 
 // -----------------------------
 // Tipos
@@ -36,7 +36,7 @@ interface Ticket {
   prioridad: string
   estado: string
   asignadoA?: string
-  _raw: any // 🔹 guardamos el ticket completo para reenviarlo luego
+  _raw: any
 }
 
 interface Empleado {
@@ -45,7 +45,7 @@ interface Empleado {
 }
 
 // -----------------------------
-// Tabla
+// Configuración tabla
 // -----------------------------
 const columnHelper = createColumnHelper<Ticket>()
 
@@ -56,7 +56,7 @@ const AssignedTickets = () => {
   const [loading, setLoading] = useState(true)
 
   // -----------------------------
-  // Lógica para asignar ticket
+  // Asignar ticket a empleado
   // -----------------------------
   const asignarTicket = async (ticketId: number, empleadoId: number) => {
     try {
@@ -66,13 +66,11 @@ const AssignedTickets = () => {
 
       const empleado = empleados.find(e => e.id === empleadoId)
 
-      // 🔹 Mandar todo el objeto del ticket (completo)
       const payload = {
-        ...ticket._raw, // ticket completo del backend
-        assignedToEmployeeId: empleadoId // reemplazar asignación
+        ...ticket._raw,
+        assignedToEmployeeId: empleadoId
       }
 
-      console.log('📤 Enviando ticket:', payload)
       esperar()
 
       const res = await fetch('/api/tickets/asignaciones/asignar', {
@@ -87,12 +85,11 @@ const AssignedTickets = () => {
         console.error('Error asignando ticket:', result)
         finEspera()
 
-        return      
+        return
+        
       }
 
-      console.log('✅ Ticket asignado:', result)
-
-      // Actualiza visualmente
+      // ✅ Actualización local
       setData(prev =>
         prev.map(t =>
           t.id === ticketId
@@ -109,12 +106,13 @@ const AssignedTickets = () => {
   }
 
   // -----------------------------
-  // Obtener tickets y empleados reales
+  // Obtener tickets y empleados
   // -----------------------------
   const fetchTickets = async () => {
     try {
       setLoading(true)
       esperar()
+
       const res = await fetch('/api/tickets/asignaciones/obtener')
       const json = await res.json()
 
@@ -127,16 +125,16 @@ const AssignedTickets = () => {
           prioridad: t.priority?.name || 'N/A',
           estado: t.status?.name || 'Pendiente',
           asignadoA: t.assignedToEmployeeId ? 'Asignado' : undefined,
-          _raw: t // 🔹 guardamos el objeto completo
+          _raw: t
         }))
 
         setData(mapped)
         setEmpleados(json.empleados || [])
-        finEspera()
       } else {
         console.error('Error cargando datos:', json.message)
-        finEspera()
       }
+
+      finEspera()
     } catch (error) {
       console.error('Error al cargar tickets:', error)
     } finally {
@@ -149,7 +147,7 @@ const AssignedTickets = () => {
   }, [])
 
   // -----------------------------
-  // Definición de columnas
+  // Columnas
   // -----------------------------
   const columns = useMemo(
     () => [
@@ -162,19 +160,13 @@ const AssignedTickets = () => {
       columnHelper.accessor('descripcion', { header: 'Descripción' }),
       columnHelper.accessor('prioridad', {
         header: 'Prioridad',
-        
         cell: info => {
           const value = info.getValue()
 
           const color =
-            value === 'Alta'
-              ? 'error'
-              : value === 'Media'
-              ? 'warning'
-              : 'success'
+            value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
 
           return <Chip label={value} color={color as any} size="small" />
-
         }
       }),
       columnHelper.accessor('estado', {
@@ -182,13 +174,14 @@ const AssignedTickets = () => {
         cell: info => {
           const estado = info.getValue()
 
-          return (
-            <Chip
-              label={estado}
-              color={estado === 'Pendiente' ? 'default' : 'primary'}
-              size="small"
-            />
-          )
+          const color =
+            estado === 'Asignado'
+              ? 'primary'
+              : estado === 'Pendiente'
+              ? 'default'
+              : 'success'
+
+          return <Chip label={estado} color={color as any} size="small" />
         }
       }),
       columnHelper.display({
@@ -238,33 +231,46 @@ const AssignedTickets = () => {
     <Card>
       <CardHeader title="Asignación de Tickets" />
       <div className="overflow-x-auto">
-        <table className={styles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {data.length > 0 ? (
+          <table className={styles.table}>
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+
+          // 🔹 Mensaje cuando no hay tickets pendientes de asignación
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="150px"
+            textAlign="center"
+          >
+            <Typography variant="body1" color="text.secondary">
+              Sin tickets pendientes de asignación.
+            </Typography>
+          </Box>
+        )}
       </div>
     </Card>
   )
