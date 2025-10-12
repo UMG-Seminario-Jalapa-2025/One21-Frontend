@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     const empleadosConPartner = await Promise.all(
       employeesData.map(async (emp: any) => {
         try {
-          const partnerRes = await fetch(`${baseUrlPartners}partners/partners${emp.businessPartnerId}`, {
+          const partnerRes = await fetch(`${baseUrlPartners}partners/partners/${emp.businessPartnerId}`, {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
@@ -74,6 +74,8 @@ export async function GET(req: NextRequest) {
           })
 
           const partnerData = await parseResponse(partnerRes)
+
+          console.log('🔹 partnerData:', partnerData)
 
           return {
             id: emp.id,

@@ -21,6 +21,10 @@ import {
 // Style Imports
 import styles from '@core/styles/table.module.css'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+// import { showAlert } from "@/components/ui/AlertProvider"
+
 // -----------------------------
 // Tipos
 // -----------------------------
@@ -46,6 +50,7 @@ interface Empleado {
 const columnHelper = createColumnHelper<Ticket>()
 
 const AssignedTickets = () => {
+  const { esperar, finEspera } = useLoading()
   const [data, setData] = useState<Ticket[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +73,7 @@ const AssignedTickets = () => {
       }
 
       console.log('📤 Enviando ticket:', payload)
+      esperar()
 
       const res = await fetch('/api/tickets/asignaciones/asignar', {
         method: 'PUT',
@@ -79,8 +85,9 @@ const AssignedTickets = () => {
 
       if (!res.ok) {
         console.error('Error asignando ticket:', result)
+        finEspera()
 
-        return
+        return      
       }
 
       console.log('✅ Ticket asignado:', result)
@@ -93,8 +100,11 @@ const AssignedTickets = () => {
             : t
         )
       )
+
+      finEspera()
     } catch (error) {
       console.error('Error al asignar ticket:', error)
+      finEspera()
     }
   }
 
@@ -104,6 +114,7 @@ const AssignedTickets = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true)
+      esperar()
       const res = await fetch('/api/tickets/asignaciones/obtener')
       const json = await res.json()
 
@@ -121,8 +132,10 @@ const AssignedTickets = () => {
 
         setData(mapped)
         setEmpleados(json.empleados || [])
+        finEspera()
       } else {
         console.error('Error cargando datos:', json.message)
+        finEspera()
       }
     } catch (error) {
       console.error('Error al cargar tickets:', error)
