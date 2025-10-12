@@ -10,6 +10,10 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import CircularProgress from '@mui/material/CircularProgress'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+// import { showAlert } from "@/components/ui/AlertProvider"
+
 // Tipos
 export interface Ticket {
   id: number
@@ -55,6 +59,7 @@ interface KanbanBoardProps {
 }
 
 const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
+  const { esperar, finEspera } = useLoading()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [empleado, setEmpleado] = useState<Empleado | null>(null)
   const [loading, setLoading] = useState(true)
@@ -87,6 +92,7 @@ const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
   // ✅ Cargar tickets del empleado autenticado
   const fetchTickets = async () => {
     try {
+      esperar()
       setLoading(true)
 
       // 🔹 ya no usamos empleadoId — el backend lo obtiene desde la cookie one21_partner
@@ -103,17 +109,20 @@ const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
           descripcion: t.description,
           prioridad: t.priority?.name || 'N/A',
           estado: t.status?.name?.toLowerCase() || 'pendiente',
-          asignadoA: json.empleado?.name || 'Sin asignar',
+          asignadoA: json.empleado?.name || '',
           empleadoId: json.empleado?.id,
           _raw: t
         }))
 
         setTickets(mapped)
+        finEspera()
       } else {
         console.error('Error cargando tickets:', json.message)
+        finEspera()
       }
     } catch (error) {
       console.error('Error al cargar tickets:', error)
+      finEspera()
     } finally {
       setLoading(false)
     }
@@ -151,6 +160,8 @@ const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
         assignedToEmployeeId: empleado?.id
       }
 
+      esperar()
+
       const res = await fetch(`/api/tickets/kanban/actualizar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -164,13 +175,16 @@ const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
           )
         )
         onTicketMove?.(ticketId, newStatus, empleado?.id)
+        finEspera()
       } else {
         const err = await res.json()
 
         console.error('Error actualizando estado del ticket:', err.message)
+        finEspera()
       }
     } catch (error) {
       console.error('Error al mover ticket:', error)
+      finEspera()
     }
   }
 
@@ -188,7 +202,7 @@ const KanbanBoard = ({ onTicketMove }: KanbanBoardProps) => {
         <div>
           <Typography variant="h4">Seguimiento de Tickets</Typography>
           <Typography variant="body1" color="text.secondary">
-            {empleado ? `Tickets asignados a ${empleado.name}` : 'Mis tickets asignados'}
+            {empleado ? `Tickets asignados` : 'Mis tickets asignados'}
           </Typography>
         </div>
         <Chip label={`Total: ${tickets.length} tickets`} color="primary" variant="outlined" />

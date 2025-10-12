@@ -1,27 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid'
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import Chip from '@mui/material/Chip'
-
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 
 import KanbanBoard from '@/components/kanban/KanbanBoard'
-import type { Empleado, Ticket } from '@/components/kanban/KanbanBoard'
+import type { Empleado } from '@/components/kanban/KanbanBoard'
+
+// Utilidad local para normalizar estado
+function estadoFromBackend(ticket: any): 'pendiente' | 'iniciado' | 'terminado' {
+  const name = (ticket?.status?.name ?? ticket?.statusName ?? '').toString().toLowerCase()
+
+  switch (name) {
+    case 'ingresado':
+    case 'pendiente':
+      return 'pendiente'
+    case 'iniciado':
+      return 'iniciado'
+    case 'finalizado':
+    case 'terminado':
+      return 'terminado'
+    default:
+      // fallback por si viene vacío o desconocido
+      return 'pendiente'
+  }
+}
 
 const KanbanPage = () => {
   const [empleado, setEmpleado] = useState<Empleado | null>(null)
-
-  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [rawTickets, setRawTickets] = useState<any[]>([])
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true)
 
   const fetchEmpleadoTickets = async () => {
@@ -31,13 +44,17 @@ const KanbanPage = () => {
       const json = await res.json()
 
       if (res.ok && json.success) {
-        setEmpleado(json.empleado)
-        setTickets(json.tickets || [])
+        setEmpleado(json.empleado ?? null)
+        setRawTickets(Array.isArray(json.tickets) ? json.tickets : [])
       } else {
         console.error('Error obteniendo datos:', json.message)
+        setEmpleado(null)
+        setRawTickets([])
       }
     } catch (error) {
       console.error('Error cargando tickets:', error)
+      setEmpleado(null)
+      setRawTickets([])
     } finally {
       setLoading(false)
     }
@@ -47,8 +64,38 @@ const KanbanPage = () => {
     fetchEmpleadoTickets()
   }, [refreshTrigger])
 
-  const handleTicketMove = (ticketId: number, newStatus: Ticket['estado']) => {
-    console.log('Ticket movido:', { ticketId, newStatus })
+  // Normalizamos SOLO para las estadísticas
+  const stats = useMemo(() => {
+    const estados = rawTickets.map(t => estadoFromBackend(t))
+    const pendientes = estados.filter(e => e === 'pendiente').length
+    const iniciados = estados.filter(e => e === 'iniciado').length
+    const terminados = estados.filter(e => e === 'terminado').length
+
+    return { pendientes, iniciados, terminados }
+  }, [rawTickets])
+
+  const STATUS_MAP = {
+    pendiente: { id: 1, name: 'INGRESADO' },
+    iniciado:  { id: 2, name: 'INICIADO' },
+    terminado: { id: 3, name: 'FINALIZADO' }
+  } as const
+
+  const handleTicketMove = (
+    ticketId: number,
+    newStatus: 'pendiente' | 'iniciado' | 'terminado'
+  ) => {
+    //Actualización optimista del ticket en memoria
+    setRawTickets(prev =>
+      prev.map(t =>
+        t.id === ticketId
+          ? {
+              ...t,
+              status: STATUS_MAP[newStatus],     
+              statusId: STATUS_MAP[newStatus].id 
+            }
+          : t
+      )
+    )
   }
 
   const handleRefresh = () => {
@@ -74,26 +121,13 @@ const KanbanPage = () => {
         </Tooltip>
       </div>
 
-      {/* Estadísticas rápidas */}
+      {/* Estadísticas rápidas (sin “Empleado activo”) */}
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent className="text-center">
-              <Typography variant="h4" color="primary" gutterBottom>
-                {empleado ? 1 : 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Empleado activo
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent className="text-center">
               <Typography variant="h4" color="warning" gutterBottom>
-                {tickets.filter(t => t.estado === 'pendiente').length}
+                {loading ? '-' : stats.pendientes}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Tickets pendientes
@@ -102,11 +136,11 @@ const KanbanPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent className="text-center">
               <Typography variant="h4" color="info" gutterBottom>
-                {tickets.filter(t => t.estado === 'iniciado').length}
+                {loading ? '-' : stats.iniciados}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 En progreso
@@ -115,11 +149,11 @@ const KanbanPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent className="text-center">
               <Typography variant="h4" color="success" gutterBottom>
-                {tickets.filter(t => t.estado === 'terminado').length}
+                {loading ? '-' : stats.terminados}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Completados

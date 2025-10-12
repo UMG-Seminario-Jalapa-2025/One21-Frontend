@@ -133,7 +133,17 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const tickets = ticketsData?.data || ticketsData
+    let tickets = ticketsData?.data || ticketsData
+
+    // ===================== 3️⃣ Filtrar tickets por estado (1 y 2) =====================
+    if (Array.isArray(tickets)) {
+      tickets = tickets.filter(t => {
+        const estadoId =
+          t?.status?.id ?? t?.statusId ?? t?.estado_id ?? null
+          
+        return estadoId === 1 || estadoId === 2
+      })
+    }
 
     // ===================== 3️⃣ Respuesta final =====================
     return NextResponse.json(
