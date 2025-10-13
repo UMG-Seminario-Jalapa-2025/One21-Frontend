@@ -34,8 +34,9 @@ export const menuConfig = [
         roles: ['app-admin', 'uma_authorization', 'client', 'employee'],
         children: [
           { type: 'item', label: 'Crear Ticket', href: '/ticket/crear', roles: ['app-admin', 'client', 'employee', 'uma_authorization'] },
+          { type: 'item', label: 'Ver Todos los Tickets', href: '/ticket/ver-todos', roles: ['app-admin'] },
           { type: 'item', label: 'Asignar Tickets', href: '/ticket/asignar', roles: ['app-admin'] },
-          { type: 'item', label: 'Seguimiento de Tickets', href: '/kanban', roles: ['app-admin', 'employee'] },
+          { type: 'item', label: 'Seguimiento de Tickets', href: '/kanban', roles: ['employee'] },
           { type: 'item', label: 'Prioridades', href: '/prioridades', roles: ['app-admin'] },
           { type: 'item', label: 'Categorías', href: '/categorias', roles: ['app-admin'] },
           { type: 'item', label: 'Estados', href: '/status', roles: ['app-admin'] },
