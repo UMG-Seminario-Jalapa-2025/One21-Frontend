@@ -239,11 +239,11 @@ export default function StatusPage() {
                 </IconButton>
               </Tooltip>
 
-              <Tooltip title='Eliminar'>
+              {/* <Tooltip title='Eliminar'>
                 <IconButton color='error' size='small' onClick={() => setConfirmDialog({ open: true, status })}>
                   <i className='tabler-trash' />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           )
         }
