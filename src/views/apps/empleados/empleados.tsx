@@ -56,7 +56,7 @@ export default function EmpleadosPage() {
   // ================= CARGAR LISTA =================
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/empleados?ts=' + Date.now(), { cache: 'no-store' })
+      const res = await fetch('/api/empleados', { cache: 'no-store' })
 
       if (!res.ok) throw new Error(`Error al obtener empleados: ${res.status}`)
 
@@ -173,7 +173,7 @@ export default function EmpleadosPage() {
   // ================= Filtrado =================
   const empleadosFiltrados = useMemo(() => {
     const q = query.toLowerCase().trim()
-    
+
     if (!q) return empleados
 
     return empleados.filter(
