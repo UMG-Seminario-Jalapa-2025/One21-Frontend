@@ -47,7 +47,7 @@ export const menuConfig = [
         type: 'submenu',
         label: 'Configuración',
         icon: 'tabler-settings',
-        roles: ['app-admin', 'uma_authorization'],
+        roles: ['app-admin'],
         children: [
           { type: 'item', label: 'Paises', href: '/countries', roles: ['app-admin'] },
           { type: 'item', label: 'Roles', href: '/roles', roles: ['app-admin'] },
