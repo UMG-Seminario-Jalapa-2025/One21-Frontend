@@ -60,7 +60,7 @@ export default function VerTicketsCliente() {
   const fetchTickets = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/tickets/cliente')
+      const res = await fetch('/api/tickets/kanban/cliente')
       const json = await res.json()
 
       if (res.ok && json?.tickets) {
@@ -142,7 +142,7 @@ export default function VerTicketsCliente() {
               : value === 'Completado'
               ? 'success'
               : 'secondary'
-              
+
           return <Chip label={value} color={color as any} size="small" />
         }
       }),
