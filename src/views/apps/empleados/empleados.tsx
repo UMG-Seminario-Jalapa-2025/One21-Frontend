@@ -18,6 +18,10 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
 
 // React Table
 import {
@@ -42,6 +46,7 @@ type Empleado = {
   positionTitle?: string
   baseSalary?: number
   currencyCode?: string
+  jobPositionId?: number
 }
 
 const columnHelper = createColumnHelper<Empleado>()
@@ -116,6 +121,15 @@ export default function EmpleadosPage() {
     fetchData()
   }, [])
 
+  const [puestos, setPuestos] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('/api/employee_positions/obtener')
+      .then(res => res.json())
+      .then(data => (Array.isArray(data) ? setPuestos(data) : setPuestos([])))
+      .catch(() => setPuestos([]))
+  }, [])
+
   // ================= PATCH estado =================
   const toggleActivo = async (id: number, value: boolean) => {
     try {
@@ -141,13 +155,12 @@ export default function EmpleadosPage() {
     setOpenModal(true)
   }
 
-  // ================= Guardar cambios =================
   const handleGuardar = async () => {
     if (!selectedEmpleado) return
 
     try {
       const payload = {
-        positionTitle: selectedEmpleado.positionTitle,
+        jobPositionId: selectedEmpleado.jobPositionId,
         baseSalary: selectedEmpleado.baseSalary,
         currencyCode: selectedEmpleado.currencyCode
       }
@@ -291,14 +304,27 @@ export default function EmpleadosPage() {
         <DialogTitle>Editar Empleado</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} className='mt-2'>
+            {/* Puesto (Select) */}
             <Grid item xs={12}>
-              <TextField
-                label='Puesto'
-                fullWidth
-                value={selectedEmpleado?.positionTitle || ''}
-                onChange={e => setSelectedEmpleado(prev => (prev ? { ...prev, positionTitle: e.target.value } : prev))}
-              />
+              <FormControl fullWidth>
+                <InputLabel>Puesto</InputLabel>
+                <Select
+                  value={selectedEmpleado?.jobPositionId || ''}
+                  label='Puesto'
+                  onChange={e =>
+                    setSelectedEmpleado(prev => (prev ? { ...prev, jobPositionId: Number(e.target.value) } : prev))
+                  }
+                >
+                  {puestos.map(p => (
+                    <MenuItem key={p.id} value={p.id}>
+                      {p.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
+
+            {/* Salario base */}
             <Grid item xs={6}>
               <TextField
                 label='Salario Base'
@@ -310,6 +336,8 @@ export default function EmpleadosPage() {
                 }
               />
             </Grid>
+
+            {/* Moneda */}
             <Grid item xs={6}>
               <TextField
                 label='Moneda'

@@ -42,6 +42,10 @@ function validateTicketData(body: any) {
     return NextResponse.json({ message: 'El teléfono de contacto debe ser texto' }, { status: 400 })
   }
 
+  if (!body.sla_due_at || isNaN(Date.parse(body.sla_due_at))) {
+    return NextResponse.json({ message: 'La fecha del ticket (sla_due_at) es requerida o no es válida' }, { status: 400 })
+  }
+
   return null
 }
 
@@ -69,7 +73,8 @@ export async function POST(req: NextRequest) {
     const payload = {
       ...body,
       ticketNumber: generateTicketNumber(),
-      businessPartnerId: partner ? Number(partner) : null
+      businessPartnerId: partner ? Number(partner) : null,
+      slaDueAt: body.sla_due_at ? new Date(body.sla_due_at).toISOString() : null
     }
 
     // Validaciones según el modelo
