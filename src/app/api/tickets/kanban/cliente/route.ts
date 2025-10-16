@@ -38,20 +38,15 @@ function getPartnerFromCookies(req: NextRequest) {
   } catch (e) {
     console.error('❌ Error parseando cookie one21_partner:', e)
 
-    return NextResponse.json(
-      { step: 'partner', message: 'Error al leer la cookie de partner.' },
-      { status: 400 }
-    )
+    return NextResponse.json({ step: 'partner', message: 'Error al leer la cookie de partner.' }, { status: 400 })
   }
 }
 
 // ========================= MAIN =========================
 export async function GET(req: NextRequest) {
   try {
-    const baseUrlTickets =
-      process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/tickets/'
+    const baseUrlTickets = process.env.NEXT_PUBLIC_API_TICKETS_URL || 'http://localhost:8081/tickets/'
 
-    // Obtener token y partner desde cookies
     const tokenResult = getTokenFromCookies(req)
 
     if (tokenResult instanceof NextResponse) return tokenResult
@@ -65,43 +60,69 @@ export async function GET(req: NextRequest) {
     const partnerId = partner?.id ?? partner
 
     if (!partnerId) {
-      return NextResponse.json(
-        { step: 'validation', message: 'El partner no tiene un ID válido.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ step: 'validation', message: 'El partner no tiene un ID válido.' }, { status: 400 })
     }
 
     console.log('🔹 Buscando tickets del partner ID:', partnerId)
 
-    // ===================== 1️⃣ Buscar tickets del partner =====================
-    const response = await fetch(`${baseUrlTickets}tickets/by-partner/${partnerId}`, {
+    const ticketsRes = await fetch(`${baseUrlTickets}tickets`, {
+      method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       }
     })
 
-    const data = await parseResponse(response)
+    const ticketsData = await parseResponse(ticketsRes)
 
-    if (!response.ok) {
+    if (!ticketsRes.ok) {
       return NextResponse.json(
         {
           step: 'tickets_fetch',
-          message: data?.message || 'Error al obtener tickets del cliente.'
+          message: ticketsData?.message || 'Error al obtener tickets del cliente.'
         },
-        { status: response.status }
+        { status: ticketsRes.status }
       )
     }
 
-    const tickets = data?.data || data
+    const tickets = ticketsData?.data || ticketsData || []
 
-    // ===================== 2️⃣ Respuesta final =====================
-    return NextResponse.json({ success: true, tickets }, { status: 200 })
+    // console.log(
+    //   '✅ Total de tickets obtenidos:',
+    //   Array.isArray(tickets) ? tickets.length : 0
+    // )
+
+    const filteredTickets = Array.isArray(tickets)
+      ? tickets.filter((t: any) => {
+          if (!t.businessPartnerId && !t.business_partner_id) return true
+
+          return t.businessPartnerId === partnerId || t.business_partner_id === partnerId
+        })
+      : []
+
+    // console.log(' Tickets filtrados para partner:', filteredTickets.length)
+
+    // ===================== 3️⃣ Normalizar fechas =====================
+    const normalizedTickets = filteredTickets.map((t: any) => {
+      // ✅ Tu base de datos usa "opened_at" y "updated_at"
+      const fecha = t.fecha_creacion || t.opened_at || t.updated_at || t.slaDueAt || null
+
+      return {
+        ...t,
+        fecha_creacion: fecha // nombre unificado
+      }
+    })
+
+    return NextResponse.json(
+      {
+        success: true,
+        tickets: normalizedTickets
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error('❌ Error obteniendo tickets del cliente:', error)
 
-    return NextResponse.json(
-      { step: 'server', message: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
   }
 }

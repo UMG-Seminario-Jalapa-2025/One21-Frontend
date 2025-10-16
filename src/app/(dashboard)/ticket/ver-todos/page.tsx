@@ -24,9 +24,6 @@ import {
 // Styles
 import styles from '@core/styles/table.module.css'
 
-// Componente de protección de rutas
-// import RoleBasedRoute from '@/components/RoleBasedRoute'
-
 // Tipos
 interface Ticket {
   id: number
@@ -86,16 +83,30 @@ const VerTodosTickets = () => {
           _raw: t
         }))
 
-        setData(mapped)
+        // 🔹 Ordenar por prioridad y luego por fecha (más recientes primero)
+        const prioridadOrden: Record<string, number> = { Alta: 1, Media: 2, Baja: 3, 'N/A': 4 }
+
+        const sorted = mapped.sort((a, b) => {
+          const ordenA = prioridadOrden[a.prioridad] ?? 999
+          const ordenB = prioridadOrden[b.prioridad] ?? 999
+
+          if (ordenA !== ordenB) return ordenA - ordenB
+
+          const fechaA = new Date(a._raw.slaDueAt || a._raw.updated_at).getTime()
+          const fechaB = new Date(b._raw.slaDueAt || b._raw.updated_at).getTime()
+          
+          return fechaB - fechaA
+        })
+
+        setData(sorted)
 
         // Calcular estadísticas
         const stats: Estadisticas = {
-          total: mapped.length,
-          sinAsingar: mapped.filter(t => !t._raw.assignedToEmployeeId).length,
-          pendientes: mapped.filter(t => t._raw.status?.id === 1).length,
-          iniciados: mapped.filter(t => t._raw.status?.id === 2).length,
-          completos: mapped.filter(t => t._raw.status?.id === 3).length,
-          
+          total: sorted.length,
+          sinAsingar: sorted.filter(t => !t._raw.assignedToEmployeeId).length,
+          pendientes: sorted.filter(t => t._raw.status?.id === 1).length,
+          iniciados: sorted.filter(t => t._raw.status?.id === 2).length,
+          completos: sorted.filter(t => t._raw.status?.id === 3).length
         }
 
         setEstadisticas(stats)
@@ -125,12 +136,14 @@ const VerTodosTickets = () => {
       columnHelper.accessor('descripcion', {
         header: 'Descripción',
         cell: info => (
-          <div style={{
-            maxWidth: '200px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-          }}>
+          <div
+            style={{
+              maxWidth: '200px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
             {info.getValue()}
           </div>
         )
@@ -140,10 +153,9 @@ const VerTodosTickets = () => {
         cell: info => {
           const value = info.getValue()
 
-          const color =
-            value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
+          const color = value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
 
-          return <Chip label={value} color={color as any} size="small" />
+          return <Chip label={value} color={color as any} size='small' />
         }
       }),
       columnHelper.accessor('estadoNombre', {
@@ -155,12 +167,12 @@ const VerTodosTickets = () => {
             estado === 'Pendiente'
               ? 'default'
               : estado === 'En Proceso' || estado === 'Iniciado'
-              ? 'primary'
-              : estado === 'Completado' || estado === 'Cerrado'
-              ? 'success'
-              : 'secondary'
+                ? 'primary'
+                : estado === 'Completado' || estado === 'Cerrado'
+                  ? 'success'
+                  : 'secondary'
 
-          return <Chip label={estado} color={color as any} size="small" />
+          return <Chip label={estado} color={color as any} size='small' />
         }
       }),
       columnHelper.accessor('asignadoA', { header: 'Asignación' }),
@@ -183,10 +195,10 @@ const VerTodosTickets = () => {
       <Grid item xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
-            <Typography variant="h4" color="primary">
+            <Typography variant='h4' color='primary'>
               {estadisticas.total}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Total de Tickets
             </Typography>
           </CardContent>
@@ -196,10 +208,10 @@ const VerTodosTickets = () => {
       <Grid item xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
-            <Typography variant="h4" color="warning">
+            <Typography variant='h4' color='warning'>
               {estadisticas.pendientes}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Pendientes
             </Typography>
           </CardContent>
@@ -209,10 +221,10 @@ const VerTodosTickets = () => {
       <Grid item xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
-            <Typography variant="h4" color="info">
+            <Typography variant='h4' color='info'>
               {estadisticas.iniciados}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Iniciados
             </Typography>
           </CardContent>
@@ -222,10 +234,10 @@ const VerTodosTickets = () => {
       <Grid item xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
-            <Typography variant="h4" color="success">
+            <Typography variant='h4' color='success'>
               {estadisticas.completos}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Completos
             </Typography>
           </CardContent>
@@ -235,10 +247,10 @@ const VerTodosTickets = () => {
       <Grid item xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
-            <Typography variant="h4" color="success">
+            <Typography variant='h4' color='success'>
               {estadisticas.sinAsingar}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Sin Asignar
             </Typography>
           </CardContent>
@@ -249,7 +261,7 @@ const VerTodosTickets = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='400px'>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Cargando tickets...</Typography>
       </Box>
@@ -276,9 +288,7 @@ const VerTodosTickets = () => {
                   {table.getHeaderGroups().map(headerGroup => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map(header => (
-                        <th key={header.id}>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
+                        <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                       ))}
                     </tr>
                   ))}
@@ -287,9 +297,7 @@ const VerTodosTickets = () => {
                   {table.getRowModel().rows.map(row => (
                     <tr key={row.id}>
                       {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                       ))}
                     </tr>
                   ))}
@@ -322,14 +330,8 @@ const VerTodosTickets = () => {
               </div>
             </>
           ) : (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              height="150px"
-              textAlign="center"
-            >
-              <Typography variant="body1" color="text.secondary">
+            <Box display='flex' justifyContent='center' alignItems='center' height='150px' textAlign='center'>
+              <Typography variant='body1' color='text.secondary'>
                 No hay tickets disponibles.
               </Typography>
             </Box>

@@ -2,16 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  Typography,
-  Grid,
-  Chip,
-  Box,
-  CircularProgress
-} from '@mui/material'
+import { Card, CardHeader, CardContent, Typography, Grid, Chip, Box, CircularProgress } from '@mui/material'
 
 import {
   useReactTable,
@@ -41,7 +32,6 @@ interface Estadisticas {
   completados: number
 }
 
-// ================= Component =================
 const columnHelper = createColumnHelper<Ticket>()
 
 export default function VerTicketsCliente() {
@@ -61,31 +51,69 @@ export default function VerTicketsCliente() {
     try {
       setLoading(true)
       const res = await fetch('/api/tickets/kanban/cliente')
+
+      if (!res.ok) throw new Error(`Error HTTP ${res.status}`)
+
       const json = await res.json()
 
-      if (res.ok && json?.tickets) {
-        const mapped: Ticket[] = json.tickets.map((t: any) => ({
-          id: t.id,
-          asunto: t.subject || 'Sin asunto',
-          descripcion: t.description || 'Sin descripción',
-          prioridad: t.priority?.name || 'N/A',
-          estado: t.status?.name || 'Pendiente',
-          fechaCreacion: new Date(t.slaDueAt || t.createdAt).toLocaleDateString('es-GT'),
-          _raw: t
-        }))
+      if (json?.tickets) {
+        const mapped: Ticket[] = json.tickets.map((t: any) => {
+          // ✅ Detectar la fecha desde cualquier posible campo
+          const fecha = t.fecha_creacion || t.opened_at || t.slaDueAt || t.updated_at || null
 
-        setTickets(mapped)
+          let fechaFormateada = 'Sin fecha'
 
-        // Calcular estadísticas
+          // ✅ Formatear solo si existe y es válida
+          if (fecha) {
+            const parsedDate = new Date(fecha)
+
+            if (!isNaN(parsedDate.getTime())) {
+              fechaFormateada = parsedDate.toLocaleDateString('es-GT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            }
+          }
+
+          return {
+            id: t.id,
+            asunto: t.subject || 'Sin asunto',
+            descripcion: t.description || 'Sin descripción',
+            prioridad: t.priority?.name || 'N/A',
+            estado: t.status?.name || 'Desconocido',
+            fechaCreacion: fechaFormateada,
+            _raw: t
+          }
+        })
+
+        // 🔹 Ordenar por prioridad y luego por fecha (más recientes primero)
+
+        const prioridadOrden: Record<string, number> = { Alta: 1, Media: 2, Baja: 3, 'N/A': 4 }
+
+        const sorted = mapped.sort((a, b) => {
+          const ordenA = prioridadOrden[a.prioridad] ?? 999
+          const ordenB = prioridadOrden[b.prioridad] ?? 999
+
+          if (ordenA !== ordenB) return ordenA - ordenB
+
+          const fechaA = new Date(a._raw.slaDueAt || a._raw.updated_at).getTime()
+          const fechaB = new Date(b._raw.slaDueAt || b._raw.updated_at).getTime()
+
+          return fechaB - fechaA
+        })
+
+        setTickets(sorted)
+
+        // ======= Estadísticas reales según estado =======
         const stats: Estadisticas = {
-          total: mapped.length,
-          pendientes: mapped.filter(t => t.estado === 'Pendiente').length,
-          iniciados: mapped.filter(t => t.estado === 'En Proceso' || t.estado === 'Iniciado').length,
-          completados: mapped.filter(t => t.estado === 'Completado' || t.estado === 'Cerrado').length
+          total: sorted.length,
+          pendientes: sorted.filter(t => ['Abierto', 'Pendiente'].includes(t.estado)).length,
+          iniciados: sorted.filter(t => ['En Proceso', 'Iniciado'].includes(t.estado)).length,
+          completados: sorted.filter(t => ['Completado', 'Cerrado', 'Resuelto'].includes(t.estado)).length
         }
 
         setEstadisticas(stats)
-
       } else {
         console.error('Error cargando tickets:', json.message)
       }
@@ -103,7 +131,10 @@ export default function VerTicketsCliente() {
   // ======= Columnas =======
   const columns = useMemo(
     () => [
-      columnHelper.accessor('id', { header: 'Ticket', cell: info => `#${info.getValue()}` }),
+      columnHelper.accessor('id', {
+        header: 'Ticket',
+        cell: info => `#${info.getValue()}`
+      }),
       columnHelper.accessor('asunto', { header: 'Asunto' }),
       columnHelper.accessor('descripcion', {
         header: 'Descripción',
@@ -124,9 +155,11 @@ export default function VerTicketsCliente() {
         header: 'Prioridad',
         cell: info => {
           const value = info.getValue()
-          const color = value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
 
-          return <Chip label={value} color={color as any} size="small" />
+          const color =
+            value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : value === 'Baja' ? 'success' : 'default'
+
+          return <Chip label={value} color={color as any} size='small' />
         }
       }),
       columnHelper.accessor('estado', {
@@ -135,15 +168,15 @@ export default function VerTicketsCliente() {
           const value = info.getValue()
 
           const color =
-            value === 'Pendiente'
-              ? 'default'
-              : value === 'En Proceso'
-              ? 'primary'
-              : value === 'Completado'
-              ? 'success'
-              : 'secondary'
+            value === 'Pendiente' || value === 'Abierto'
+              ? 'warning'
+              : value === 'En Proceso' || value === 'Iniciado'
+                ? 'info'
+                : value === 'Completado' || value === 'Cerrado' || value === 'Resuelto'
+                  ? 'success'
+                  : 'default'
 
-          return <Chip label={value} color={color as any} size="small" />
+          return <Chip label={value} color={color as any} size='small' />
         }
       }),
       columnHelper.accessor('fechaCreacion', { header: 'Fecha de Creación' })
@@ -162,64 +195,32 @@ export default function VerTicketsCliente() {
   // ======= Subcomponente de estadísticas =======
   const EstadisticasCard = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h4" color="primary">
-              {estadisticas.total}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total de Tickets
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h4" color="warning.main">
-              {estadisticas.pendientes}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pendientes
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h4" color="info.main">
-              {estadisticas.iniciados}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Iniciados
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h4" color="success.main">
-              {estadisticas.completados}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Completados
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+      {[
+        { label: 'Total de Tickets', value: estadisticas.total, color: 'primary' },
+        { label: 'Pendientes', value: estadisticas.pendientes, color: 'warning.main' },
+        { label: 'Iniciados', value: estadisticas.iniciados, color: 'info.main' },
+        { label: 'Completados', value: estadisticas.completados, color: 'success.main' }
+      ].map((stat, i) => (
+        <Grid item xs={12} sm={6} md={3} key={i}>
+          <Card>
+            <CardContent>
+              <Typography variant='h4' color={stat.color as any}>
+                {stat.value}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {stat.label}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
     </Grid>
   )
 
   // ======= Loader =======
   if (loading)
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='300px'>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Cargando tickets...</Typography>
       </Box>
@@ -227,8 +228,8 @@ export default function VerTicketsCliente() {
 
   // ======= Render =======
   return (
-    <div className="p-6">
-      <Typography variant="h4" mb={4}>
+    <div className='p-6'>
+      <Typography variant='h4' mb={4}>
         Tickets del Cliente
       </Typography>
 
@@ -236,7 +237,7 @@ export default function VerTicketsCliente() {
 
       <Card>
         <CardHeader title={`Lista de Tickets (${tickets.length})`} />
-        <div className="overflow-x-auto">
+        <div className='overflow-x-auto'>
           {tickets.length > 0 ? (
             <>
               <table className={styles.table}>
@@ -244,9 +245,7 @@ export default function VerTicketsCliente() {
                   {table.getHeaderGroups().map(headerGroup => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map(header => (
-                        <th key={header.id}>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
+                        <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                       ))}
                     </tr>
                   ))}
@@ -255,9 +254,7 @@ export default function VerTicketsCliente() {
                   {table.getRowModel().rows.map(row => (
                     <tr key={row.id}>
                       {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                       ))}
                     </tr>
                   ))}
@@ -265,22 +262,22 @@ export default function VerTicketsCliente() {
               </table>
 
               {/* Paginación */}
-              <div className="flex justify-center py-4">
-                <div className="flex gap-2">
+              <div className='flex justify-center py-4'>
+                <div className='flex gap-2'>
                   <button
-                    className="px-3 py-1 border rounded disabled:opacity-50"
+                    className='px-3 py-1 border rounded disabled:opacity-50'
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                   >
                     Anterior
                   </button>
 
-                  <span className="px-3 py-1">
+                  <span className='px-3 py-1'>
                     Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
                   </span>
 
                   <button
-                    className="px-3 py-1 border rounded disabled:opacity-50"
+                    className='px-3 py-1 border rounded disabled:opacity-50'
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                   >
@@ -290,8 +287,8 @@ export default function VerTicketsCliente() {
               </div>
             </>
           ) : (
-            <Box display="flex" justifyContent="center" alignItems="center" height="150px">
-              <Typography variant="body1" color="text.secondary">
+            <Box display='flex' justifyContent='center' alignItems='center' height='150px'>
+              <Typography variant='body1' color='text.secondary'>
                 No hay tickets disponibles.
               </Typography>
             </Box>
