@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (!tokenCookie?.value) {
       return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
-    
+
     const token = tokenCookie.value
 
     // 1. Obtener partner actual
@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
     }
 
     const currentPartner = await partnerResGet.json()
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+      return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
+    }
 
     // 2. Combinar datos actuales con lo que mande el frontend
     const updatedPartner = {

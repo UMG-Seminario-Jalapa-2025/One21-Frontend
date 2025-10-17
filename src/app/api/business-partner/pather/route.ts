@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
 
     const token = tokenCookie.value
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.correo)) {
+      return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
+    }
+
     // 🔹 Generar UID único para el partner
     const code = generatePartnerUID(body.nombres, body.apellidos)
 
