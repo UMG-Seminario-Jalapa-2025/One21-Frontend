@@ -44,6 +44,10 @@ export async function POST(req: NextRequest) {
       created_by: 1
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(partnerPayload.email)) {
+      return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
+    }
+
     // === Paso 1: Crear Partner ===
     const partnerRes = await fetch(`${baseUrlTemp}partners/partners`, {
       method: 'POST',
