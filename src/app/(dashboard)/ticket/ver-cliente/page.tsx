@@ -1,18 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
-// MUI Imports
-import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import Grid from '@mui/material/Grid'
-import Chip from '@mui/material/Chip'
-import Box from '@mui/material/Box'
-import CircularProgress from '@mui/material/CircularProgress'
+import { Card, CardHeader, CardContent, Typography, Grid, Chip, Box, CircularProgress } from '@mui/material'
 
-// React Table
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,69 +12,83 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 
-// Styles
 import styles from '@core/styles/table.module.css'
 
-// Tipos
+// ================= Tipos =================
 interface Ticket {
   id: number
-  cliente: string
   asunto: string
   descripcion: string
   prioridad: string
   estado: string
-  estadoNombre: string
-  asignadoA?: string
   fechaCreacion: string
   _raw: any
 }
 
 interface Estadisticas {
   total: number
-  sinAsingar: number
   pendientes: number
   iniciados: number
-  completos: number
+  completados: number
 }
 
 const columnHelper = createColumnHelper<Ticket>()
 
-const VerTodosTickets = () => {
-  const [data, setData] = useState<Ticket[]>([])
+export default function VerTicketsCliente() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
 
   const [estadisticas, setEstadisticas] = useState<Estadisticas>({
     total: 0,
-    sinAsingar: 0,
     pendientes: 0,
     iniciados: 0,
-    completos: 0
+    completados: 0
   })
 
   const [loading, setLoading] = useState(true)
 
-  // Obtener tickets
+  // ======= Obtener tickets del cliente =======
   const fetchTickets = async () => {
     try {
       setLoading(true)
+      const res = await fetch('/api/tickets/kanban/cliente')
 
-      const res = await fetch('/api/tickets/obtenerTodos')
+      if (!res.ok) throw new Error(`Error HTTP ${res.status}`)
+
       const json = await res.json()
 
-      if (res.ok && json?.tickets) {
-        const mapped: Ticket[] = json.tickets.map((t: any) => ({
-          id: t.id,
-          cliente: t.contactName || 'Sin cliente',
-          asunto: t.subject,
-          descripcion: t.description,
-          prioridad: t.priority?.name || 'N/A',
-          estado: t.status?.name || 'Pendiente',
-          estadoNombre: t.status?.name || 'Pendiente',
-          asignadoA: t.assignedToEmployeeId ? 'Asignado' : 'Sin asignar',
-          fechaCreacion: new Date(t.slaDueAt).toLocaleDateString('es-GT'),
-          _raw: t
-        }))
+      if (json?.tickets) {
+        const mapped: Ticket[] = json.tickets.map((t: any) => {
+          // ✅ Detectar la fecha desde cualquier posible campo
+          const fecha = t.fecha_creacion || t.opened_at || t.slaDueAt || t.updated_at || null
+
+          let fechaFormateada = 'Sin fecha'
+
+          // ✅ Formatear solo si existe y es válida
+          if (fecha) {
+            const parsedDate = new Date(fecha)
+
+            if (!isNaN(parsedDate.getTime())) {
+              fechaFormateada = parsedDate.toLocaleDateString('es-GT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            }
+          }
+
+          return {
+            id: t.id,
+            asunto: t.subject || 'Sin asunto',
+            descripcion: t.description || 'Sin descripción',
+            prioridad: t.priority?.name || 'N/A',
+            estado: t.status?.name || 'Desconocido',
+            fechaCreacion: fechaFormateada,
+            _raw: t
+          }
+        })
 
         // 🔹 Ordenar por prioridad y luego por fecha (más recientes primero)
+
         const prioridadOrden: Record<string, number> = { Alta: 1, Media: 2, Baja: 3, 'N/A': 4 }
 
         const sorted = mapped.sort((a, b) => {
@@ -94,27 +99,26 @@ const VerTodosTickets = () => {
 
           const fechaA = new Date(a._raw.slaDueAt || a._raw.updated_at).getTime()
           const fechaB = new Date(b._raw.slaDueAt || b._raw.updated_at).getTime()
-          
+
           return fechaB - fechaA
         })
 
-        setData(sorted)
+        setTickets(sorted)
 
-        // Calcular estadísticas
+        // ======= Estadísticas reales según estado =======
         const stats: Estadisticas = {
           total: sorted.length,
-          sinAsingar: sorted.filter(t => !t._raw.assignedToEmployeeId).length,
-          pendientes: sorted.filter(t => t._raw.status?.id === 1).length,
-          iniciados: sorted.filter(t => t._raw.status?.id === 2).length,
-          completos: sorted.filter(t => t._raw.status?.id === 3).length
+          pendientes: sorted.filter(t => ['Abierto', 'Pendiente'].includes(t.estado)).length,
+          iniciados: sorted.filter(t => ['En Proceso', 'Iniciado'].includes(t.estado)).length,
+          completados: sorted.filter(t => ['Completado', 'Cerrado', 'Resuelto'].includes(t.estado)).length
         }
 
         setEstadisticas(stats)
       } else {
-        console.error('Error cargando datos:', json.message)
+        console.error('Error cargando tickets:', json.message)
       }
     } catch (error) {
-      console.error('Error al cargar tickets:', error)
+      console.error('❌ Error al cargar tickets del cliente:', error)
     } finally {
       setLoading(false)
     }
@@ -124,21 +128,20 @@ const VerTodosTickets = () => {
     fetchTickets()
   }, [])
 
-  // Columnas de la tabla
+  // ======= Columnas =======
   const columns = useMemo(
     () => [
       columnHelper.accessor('id', {
         header: 'Ticket',
         cell: info => `#${info.getValue()}`
       }),
-      columnHelper.accessor('cliente', { header: 'Cliente' }),
       columnHelper.accessor('asunto', { header: 'Asunto' }),
       columnHelper.accessor('descripcion', {
         header: 'Descripción',
         cell: info => (
           <div
             style={{
-              maxWidth: '200px',
+              maxWidth: '250px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
@@ -153,135 +156,89 @@ const VerTodosTickets = () => {
         cell: info => {
           const value = info.getValue()
 
-          const color = value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
+          const color =
+            value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : value === 'Baja' ? 'success' : 'default'
 
           return <Chip label={value} color={color as any} size='small' />
         }
       }),
-      columnHelper.accessor('estadoNombre', {
+      columnHelper.accessor('estado', {
         header: 'Estado',
         cell: info => {
-          const estado = info.getValue()
+          const value = info.getValue()
 
           const color =
-            estado === 'Pendiente'
-              ? 'default'
-              : estado === 'En Proceso' || estado === 'Iniciado'
-                ? 'primary'
-                : estado === 'Completado' || estado === 'Cerrado'
+            value === 'Pendiente' || value === 'Abierto'
+              ? 'warning'
+              : value === 'En Proceso' || value === 'Iniciado'
+                ? 'info'
+                : value === 'Completado' || value === 'Cerrado' || value === 'Resuelto'
                   ? 'success'
-                  : 'secondary'
+                  : 'default'
 
-          return <Chip label={estado} color={color as any} size='small' />
+          return <Chip label={value} color={color as any} size='small' />
         }
       }),
-      columnHelper.accessor('asignadoA', { header: 'Asignación' }),
       columnHelper.accessor('fechaCreacion', { header: 'Fecha de Creación' })
     ],
     []
   )
 
   const table = useReactTable({
-    data,
+    data: tickets,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } }
   })
 
-  // Componente de estadísticas
+  // ======= Subcomponente de estadísticas =======
   const EstadisticasCard = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant='h4' color='primary'>
-              {estadisticas.total}
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Total de Tickets
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant='h4' color='warning'>
-              {estadisticas.pendientes}
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Pendientes
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant='h4' color='info'>
-              {estadisticas.iniciados}
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Iniciados
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant='h4' color='success'>
-              {estadisticas.completos}
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Completos
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant='h4' color='success'>
-              {estadisticas.sinAsingar}
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Sin Asignar
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+      {[
+        { label: 'Total de Tickets', value: estadisticas.total, color: 'primary' },
+        { label: 'Pendientes', value: estadisticas.pendientes, color: 'warning.main' },
+        { label: 'Iniciados', value: estadisticas.iniciados, color: 'info.main' },
+        { label: 'Completados', value: estadisticas.completados, color: 'success.main' }
+      ].map((stat, i) => (
+        <Grid item xs={12} sm={6} md={3} key={i}>
+          <Card>
+            <CardContent>
+              <Typography variant='h4' color={stat.color as any}>
+                {stat.value}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {stat.label}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
     </Grid>
   )
 
-  if (loading) {
+  // ======= Loader =======
+  if (loading)
     return (
-      <Box display='flex' justifyContent='center' alignItems='center' minHeight='400px'>
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='300px'>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Cargando tickets...</Typography>
       </Box>
     )
-  }
 
+  // ======= Render =======
   return (
     <div className='p-6'>
-      <div className='flex justify-between items-center mb-6'>
-        <Typography variant='h4'>Administración de Tickets</Typography>
-      </div>
+      <Typography variant='h4' mb={4}>
+        Tickets del Cliente
+      </Typography>
 
-      {/* Estadísticas */}
       <EstadisticasCard />
 
-      {/* Tabla de tickets */}
       <Card>
-        <CardHeader title={`Lista de Tickets (${data.length})`} />
+        <CardHeader title={`Lista de Tickets (${tickets.length})`} />
         <div className='overflow-x-auto'>
-          {data.length > 0 ? (
+          {tickets.length > 0 ? (
             <>
               <table className={styles.table}>
                 <thead>
@@ -330,7 +287,7 @@ const VerTodosTickets = () => {
               </div>
             </>
           ) : (
-            <Box display='flex' justifyContent='center' alignItems='center' height='150px' textAlign='center'>
+            <Box display='flex' justifyContent='center' alignItems='center' height='150px'>
               <Typography variant='body1' color='text.secondary'>
                 No hay tickets disponibles.
               </Typography>
@@ -341,5 +298,3 @@ const VerTodosTickets = () => {
     </div>
   )
 }
-
-export default VerTodosTickets

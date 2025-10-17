@@ -37,7 +37,7 @@ function getTokenFromCookies(req: NextRequest) {
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    
+
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
 
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const payload = await req.json()
 
-    const res = await fetch(`${baseUrl}/${id}`, {
+    const res = await fetch(`${baseUrl}/employees/${id}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    
+
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
 
