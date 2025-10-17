@@ -92,6 +92,11 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       updatedAt: body.businessPartner.updatedAt
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(partnerPayload.email)) {
+      return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
+    }
+
+
     const resPartner = await fetch(`${baseUrl}partners/partners`, {
       method: 'PUT',
       headers: {
