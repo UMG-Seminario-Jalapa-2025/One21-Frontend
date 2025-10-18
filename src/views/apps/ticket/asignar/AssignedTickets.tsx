@@ -10,20 +10,23 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
 
 // Third-party Imports
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper
-} from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from '@tanstack/react-table'
 
 // Styles
 import styles from '@core/styles/table.module.css'
 
 // Custom Hooks
 import { useLoading } from '@/components/ui/LoadingModal'
+
+import { showAlert } from "@/components/ui/AlertProvider"
 
 // -----------------------------
 // Tipos
@@ -54,6 +57,11 @@ const AssignedTickets = () => {
   const [data, setData] = useState<Ticket[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Estados para el modal de rechazo
+  const [openRejectModal, setOpenRejectModal] = useState(false)
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [justificacion, setJustificacion] = useState('')
 
   // -----------------------------
   // Asignar ticket a empleado
@@ -86,21 +94,72 @@ const AssignedTickets = () => {
         finEspera()
 
         return
-        
       }
 
       // ✅ Actualización local
       setData(prev =>
-        prev.map(t =>
-          t.id === ticketId
-            ? { ...t, estado: 'Asignado', asignadoA: empleado?.name || '' }
-            : t
-        )
+        prev.map(t => (t.id === ticketId ? { ...t, estado: 'Asignado', asignadoA: empleado?.name || '' } : t))
       )
 
       finEspera()
     } catch (error) {
       console.error('Error al asignar ticket:', error)
+      finEspera()
+    }
+  }
+
+  // -----------------------------
+  // Rechazar ticket
+  // -----------------------------
+  const rechazarTicket = async () => {
+    if (!selectedTicket || !justificacion.trim()) {
+      showAlert('error', 'Por favor ingrese una justificación')
+
+      return
+    }
+
+    try {
+      esperar()
+
+      console.log('Enviando datos de rechazo:', {
+        id: selectedTicket.id,
+        rejectionReason: justificacion.trim()
+      })
+
+      const res = await fetch('/api/tickets/asignaciones/rechazar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...selectedTicket._raw,
+          rejectionReason: justificacion.trim()
+        })
+      })
+
+      console.log('Respuesta status:', res.status)
+
+      const result = await res.json()
+
+      console.log('Respuesta completa:', result)
+
+      if (!res.ok) {
+        console.error('Error del servidor:', result)
+        showAlert('error', result.message || 'Error al rechazar el ticket')
+        finEspera()
+
+        return
+      }
+
+      // ✅ Actualización local - remover ticket de la lista
+      setData(prev => prev.filter(t => t.id !== selectedTicket.id))
+
+      showAlert('success', 'Ticket rechazado exitosamente')
+      setOpenRejectModal(false)
+      setSelectedTicket(null)
+      setJustificacion('')
+      finEspera()
+    } catch (error) {
+      console.error('Error en rechazarTicket:', error)
+      showAlert('error', 'Error al rechazar el ticket')
       finEspera()
     }
   }
@@ -163,10 +222,9 @@ const AssignedTickets = () => {
         cell: info => {
           const value = info.getValue()
 
-          const color =
-            value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
+          const color = value === 'Alta' ? 'error' : value === 'Media' ? 'warning' : 'success'
 
-          return <Chip label={value} color={color as any} size="small" />
+          return <Chip label={value} color={color as any} size='small' />
         }
       }),
       columnHelper.accessor('estado', {
@@ -174,14 +232,9 @@ const AssignedTickets = () => {
         cell: info => {
           const estado = info.getValue()
 
-          const color =
-            estado === 'Asignado'
-              ? 'primary'
-              : estado === 'Pendiente'
-              ? 'default'
-              : 'success'
+          const color = estado === 'Asignado' ? 'primary' : estado === 'Pendiente' ? 'default' : 'success'
 
-          return <Chip label={estado} color={color as any} size="small" />
+          return <Chip label={estado} color={color as any} size='small' />
         }
       }),
       columnHelper.display({
@@ -193,22 +246,37 @@ const AssignedTickets = () => {
           return ticket.estado === 'Asignado' ? (
             <span>{ticket.asignadoA}</span>
           ) : (
-            <Select
-              size="small"
-              displayEmpty
-              defaultValue=""
-              onChange={e => asignarTicket(ticket.id, Number(e.target.value))}
-              sx={{ minWidth: 180 }}
-            >
-              <MenuItem value="" disabled>
-                Seleccionar técnico
-              </MenuItem>
-              {empleados.map(emp => (
-                <MenuItem key={emp.id} value={emp.id}>
-                  {emp.name}
+            <Box display='flex' gap={1}>
+              <Select
+                size='small'
+                displayEmpty
+                defaultValue=''
+                onChange={e => asignarTicket(ticket.id, Number(e.target.value))}
+                sx={{ minWidth: 180 }}
+              >
+                <MenuItem value='' disabled>
+                  Seleccionar técnico
                 </MenuItem>
-              ))}
-            </Select>
+                {empleados.map(emp => (
+                  <MenuItem key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </MenuItem>
+                ))}
+              </Select>
+
+              <Button
+                variant='outlined'
+                color='error'
+                size='small'
+                onClick={() => {
+                  setSelectedTicket(ticket)
+                  setJustificacion('')
+                  setOpenRejectModal(true)
+                }}
+              >
+                Rechazar
+              </Button>
+            </Box>
           )
         }
       })
@@ -225,54 +293,79 @@ const AssignedTickets = () => {
   // -----------------------------
   // Render
   // -----------------------------
-  if (loading) return <p className="p-4">Cargando tickets...</p>
+  if (loading) return <p className='p-4'>Cargando tickets...</p>
 
   return (
-    <Card>
-      <CardHeader title="Asignación de Tickets" />
-      <div className="overflow-x-auto">
-        {data.length > 0 ? (
-          <table className={styles.table}>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
+    <>
+      <Card>
+        <CardHeader title='Asignación de Tickets' />
+        <div className='overflow-x-auto'>
+          {data.length > 0 ? (
+            <table className={styles.table}>
+              <thead>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <Box display='flex' justifyContent='center' alignItems='center' height='150px' textAlign='center'>
+              <Typography variant='body1' color='text.secondary'>
+                Sin tickets pendientes de asignación.
+              </Typography>
+            </Box>
+          )}
+        </div>
+      </Card>
 
-          // 🔹 Mensaje cuando no hay tickets pendientes de asignación
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="150px"
-            textAlign="center"
-          >
-            <Typography variant="body1" color="text.secondary">
-              Sin tickets pendientes de asignación.
+      {/* Modal de Rechazo */}
+      <Dialog open={openRejectModal} onClose={() => setOpenRejectModal(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>Rechazar Ticket #{selectedTicket?.id}</DialogTitle>
+
+        <DialogContent>
+          <Box mb={2} mt={1}>
+            <Typography variant='body2' color='text.secondary'>
+              <strong>Cliente:</strong> {selectedTicket?.cliente}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              <strong>Asunto:</strong> {selectedTicket?.asunto}
             </Typography>
           </Box>
-        )}
-      </div>
-    </Card>
+
+          <TextField
+            label='Justificación del rechazo'
+            placeholder='Ingrese el motivo por el cual se rechaza este ticket...'
+            multiline
+            rows={4}
+            fullWidth
+            required
+            value={justificacion}
+            onChange={e => setJustificacion(e.target.value)}
+            helperText='Este comentario quedará registrado en el historial'
+          />
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setOpenRejectModal(false)}>Cancelar</Button>
+          <Button onClick={rechazarTicket} color='error' variant='contained' disabled={!justificacion.trim()}>
+            Confirmar Rechazo
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

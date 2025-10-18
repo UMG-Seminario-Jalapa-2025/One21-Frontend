@@ -43,7 +43,10 @@ function validateTicketData(body: any) {
   }
 
   if (!body.sla_due_at || isNaN(Date.parse(body.sla_due_at))) {
-    return NextResponse.json({ message: 'La fecha del ticket (sla_due_at) es requerida o no es válida' }, { status: 400 })
+    return NextResponse.json(
+      { message: 'La fecha del ticket (sla_due_at) es requerida o no es válida' },
+      { status: 400 }
+    )
   }
 
   return null
