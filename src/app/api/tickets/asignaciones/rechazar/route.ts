@@ -79,7 +79,7 @@ export async function PUT(req: NextRequest) {
       parentTicket: body.parentTicket ? { id: body.parentTicket.id } : null,
       category: body.category ? { id: body.category.id } : null,
       priority: body.priority ? { id: body.priority.id } : null,
-      status: { id: 3 } // 🔹 Estado "Rechazado" - ajusta el ID según tu BD
+      status: { id: 2 } // 🔹 Estado "Rechazado" - ajusta el ID según tu BD
     }
 
     console.log('📦 Payload:', payload)

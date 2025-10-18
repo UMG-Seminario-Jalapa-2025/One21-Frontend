@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
 
     const body = await req.json()
 
-    const res = await fetch(`${baseUrl}/employees/job-position`, {
+    const res = await fetch(`${baseUrl}/job-position`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -128,7 +128,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}/employees/job-position/${params.id}`, {
+    const res = await fetch(`${baseUrl}/job-position/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ message: 'Puesto eliminado con éxito' }, { status: 200 })
   } catch (err) {
     console.error('Error DELETE /employee_positions/[id]:', err)
-    
+
     return NextResponse.json(
       { step: 'server', message: 'Error interno del servidor' },
       { status: 500 }

@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
+import { useState } from 'react'
+
 import Grid from '@mui/material/Grid2'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 
 import CustomTextField from '@core/components/mui/TextField'
-
 import PhoneTable, { PhoneContact } from '@/components/ui/PhoneTable'
+
 
 type StepPersonaInfoProps = {
   handleNext: () => void
@@ -13,10 +15,10 @@ type StepPersonaInfoProps = {
   formData: {
     nombres: string
     apellidos: string
-    dpi?: string // Comentado para futuro
-    telefono?: string // Mantenido por compatibilidad
-    telefonoPrincipal?: string // Nuevo campo para teléfono principal
-    telefonoSecundario?: string // Nuevo campo para teléfono secundario
+    dpi?: string
+    telefono?: string
+    telefonoPrincipal?: string
+    telefonoSecundario?: string
     correo: string
     phones?: PhoneContact[]
     [key: string]: any
@@ -25,10 +27,10 @@ type StepPersonaInfoProps = {
     React.SetStateAction<{
       nombres: string
       apellidos: string
-      dpi?: string // Comentado para futuro
-      telefono?: string // Mantenido por compatibilidad
-      telefonoPrincipal?: string // Nuevo campo para teléfono principal
-      telefonoSecundario?: string // Nuevo campo para teléfono secundario
+      dpi?: string
+      telefono?: string
+      telefonoPrincipal?: string
+      telefonoSecundario?: string
       correo: string
       phones?: PhoneContact[]
       [key: string]: any
@@ -37,6 +39,29 @@ type StepPersonaInfoProps = {
 }
 
 const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: StepPersonaInfoProps) => {
+  const [errors, setErrors] = useState<{ telefonoPrincipal?: string }>({})
+
+  const isValidPhone = (value: string) => {
+    return /^[0-9]{8,15}$/.test(value)
+  }
+
+  const handleNextValidated = () => {
+    const newErrors: typeof errors = {}
+
+    if (!isValidPhone(formData.telefonoPrincipal || '')) {
+      newErrors.telefonoPrincipal = 'Ingrese un número válido (solo dígitos, 8-15 caracteres).'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+
+      return
+    }
+
+    setErrors({})
+    handleNext()
+  }
+
   return (
     <>
       <Typography variant="h6" gutterBottom>
@@ -53,6 +78,7 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             onChange={e => setFormData({ ...formData, nombres: e.target.value })}
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6 }}>
           <CustomTextField
             fullWidth
@@ -62,16 +88,6 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             onChange={e => setFormData({ ...formData, apellidos: e.target.value })}
           />
         </Grid>
-        {/* Comentado para futuro - Campo DPI */}
-        {/* <Grid size={{ xs: 12, sm: 6 }}>
-          <CustomTextField
-            fullWidth
-            label="DPI"
-            placeholder="0000 00000 0000"
-            value={formData.dpi}
-            onChange={e => setFormData({ ...formData, dpi: e.target.value })}
-          />
-        </Grid> */}
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <CustomTextField
@@ -80,8 +96,16 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
             placeholder="0000 0000"
             value={formData.telefonoPrincipal || ''}
             onChange={e => setFormData({ ...formData, telefonoPrincipal: e.target.value })}
+            onInput={e => {
+              const target = e.target as HTMLInputElement
+
+              target.value = target.value.replace(/\D/g, '')
+            }}
+            error={!!errors.telefonoPrincipal}
+            helperText={errors.telefonoPrincipal}
           />
         </Grid>
+
         <Grid size={{ xs: 12, sm: 6 }}>
           <CustomTextField
             fullWidth
@@ -93,11 +117,10 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
           />
         </Grid>
 
-        {/* Tabla de teléfonos adicionales */}
         <Grid size={{ xs: 12 }}>
           <PhoneTable
             phones={formData.phones || []}
-            onPhonesChange={(phones) => setFormData({ ...formData, phones })}
+            onPhonesChange={phones => setFormData({ ...formData, phones })}
           />
         </Grid>
 
@@ -105,7 +128,7 @@ const StepPersonaInfo = ({ handleNext, handleCancel, formData, setFormData }: St
           <Button variant="outlined" color="error" onClick={handleCancel}>
             Cancelar
           </Button>
-          <Button variant="contained" onClick={handleNext}>
+          <Button variant="contained" onClick={handleNextValidated}>
             Siguiente
           </Button>
         </Grid>

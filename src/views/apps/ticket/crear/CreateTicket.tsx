@@ -3,6 +3,8 @@
 // React Imports
 import { useState, useEffect } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -18,10 +20,11 @@ import FormControl from '@mui/material/FormControl'
 import Snackbar from '@mui/material/Snackbar'
 import MuiAlert from '@mui/material/Alert'
 
-// Alert helper
 const Alert = MuiAlert
 
 const CreateTicket = () => {
+  const router = useRouter() // ✅ para redirigir después de crear el ticket
+
   const [form, setForm] = useState({
     subject: '',
     description: '',
@@ -30,14 +33,14 @@ const CreateTicket = () => {
     contact_name: '',
     contact_email: '',
     contact_phone: '',
-    sla_due_at: '' // 👈 Campo de fecha
+    sla_due_at: ''
   })
 
+  const [errors, setErrors] = useState<{ contact_email?: string; contact_phone?: string }>({})
   const [prioridades, setPrioridades] = useState<{ id: number; name: string }[]>([])
   const [categorias, setCategorias] = useState<{ id: number; name: string }[]>([])
   const [loading, setLoading] = useState(false)
 
-  // ✅ Estado para Snackbar
   const [snackbar, setSnackbar] = useState<{
     open: boolean
     message: string
@@ -48,16 +51,13 @@ const CreateTicket = () => {
     severity: 'success'
   })
 
-  // Obtener prioridades y categorías desde la API
   useEffect(() => {
     const fetchPrioridades = async () => {
       try {
         const res = await fetch('/api/tickets/prioridades/obtener')
-
         const data = await res.json()
 
         setPrioridades(data?.data || [])
-
       } catch (error) {
         console.error('Error al obtener prioridades:', error)
       }
@@ -66,7 +66,6 @@ const CreateTicket = () => {
     const fetchCategorias = async () => {
       try {
         const res = await fetch('/api/tickets/categorias/obtener')
-
         const data = await res.json()
 
         setCategorias(data?.data || [])
@@ -79,34 +78,52 @@ const CreateTicket = () => {
     fetchCategorias()
   }, [])
 
-  // Manejadores de cambios
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const isValidPhone = (phone: string) => /^[0-9]{8,15}$/.test(phone)
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
 
-    setForm(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    if (name === 'contact_phone') {
+      const numericValue = value.replace(/\D/g, '')
+
+      setForm(prev => ({ ...prev, [name]: numericValue }))
+
+      return
+    }
+
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target
 
-    setForm(prev => ({
-    
-      ...prev,
-      [name]: value
-    }))
-
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }))
-  }
+  const handleCloseSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }))
 
-  // Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const newErrors: typeof errors = {}
+
+    if (!isValidEmail(form.contact_email)) newErrors.contact_email = 'Ingrese un correo electrónico válido.'
+
+    if (!isValidPhone(form.contact_phone)) newErrors.contact_phone = 'Ingrese solo números válidos (8-15 dígitos).'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      setSnackbar({
+        open: true,
+        message: 'Revise los campos marcados antes de continuar.',
+        severity: 'error'
+      })
+
+      return
+    }
+
+    setErrors({})
     setLoading(true)
 
     try {
@@ -115,11 +132,11 @@ const CreateTicket = () => {
         description: form.description,
         category: { id: Number(form.category_id) },
         priority: { id: Number(form.priority_id) },
-        status: { id: 1 }, // estado inicial (ej. "Abierto")
+        status: { id: 1 },
         contactName: form.contact_name,
         contactEmail: form.contact_email,
         contactPhone: form.contact_phone,
-        sla_due_at: form.sla_due_at ? new Date(form.sla_due_at) : null // 👈 enviamos la fecha seleccionada
+        sla_due_at: form.sla_due_at ? new Date(form.sla_due_at) : null
       }
 
       const res = await fetch('/api/tickets/ticket/crear', {
@@ -135,6 +152,7 @@ const CreateTicket = () => {
           severity: 'success'
         })
 
+        // 🟢 Limpia el formulario
         setForm({
           subject: '',
           description: '',
@@ -145,6 +163,11 @@ const CreateTicket = () => {
           contact_phone: '',
           sla_due_at: ''
         })
+
+        // ⏳ Espera 1 segundo para mostrar el snackbar y luego redirige
+        setTimeout(() => {
+          router.push('/ticket/ver-cliente') // 🚀 Redirección automática
+        }, 1000)
       } else {
         setSnackbar({
           open: true,
@@ -240,6 +263,8 @@ const CreateTicket = () => {
                   fullWidth
                   required
                   type='email'
+                  error={!!errors.contact_email}
+                  helperText={errors.contact_email}
                 />
               </Grid>
 
@@ -250,10 +275,12 @@ const CreateTicket = () => {
                   value={form.contact_phone}
                   onChange={handleChange}
                   fullWidth
+                  error={!!errors.contact_phone}
+                  helperText={errors.contact_phone}
+                  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                 />
               </Grid>
 
-              {/* ✅ Campo de selección de fecha */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   label='Fecha del ticket'
@@ -290,7 +317,6 @@ const CreateTicket = () => {
         </CardContent>
       </Card>
 
-      {/* ✅ Snackbar global */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
