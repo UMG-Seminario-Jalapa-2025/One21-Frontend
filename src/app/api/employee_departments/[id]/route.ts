@@ -32,7 +32,7 @@ function getTokenFromCookies(req: NextRequest) {
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    
+
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
 
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    
+
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
 
@@ -101,7 +101,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     }
 
     // Enviar al endpoint genérico sin ID
-    const res = await fetch(`${baseUrl}/employees/departments`, {
+    const res = await fetch(`${baseUrl}/departments`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    
+
     // Validate and get token
     const tokenResult = getTokenFromCookies(req)
 
@@ -150,7 +150,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
     const token = tokenResult
 
-    const res = await fetch(`${baseUrl}/employees/departments/${id}`, {
+    const res = await fetch(`${baseUrl}/departments/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
