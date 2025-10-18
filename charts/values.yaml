@@ -8,8 +8,8 @@ namespace: one21
 containerPort: 3000
 
 image:
-  repository: seminariojalapa/one21-frontend
-  tag: 'latest'
+  repository: seminariojalapa/dev-one21-frontend
+  tag: '8'
   pullPolicy: Always
 
 ingress:

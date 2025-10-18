@@ -1,0 +1,78 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function PATCH(req: NextRequest, context: any): Promise<NextResponse> {
+  try {
+    const { id } = context.params
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091'
+
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
+
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
+
+    const { status } = await req.json()
+
+    const res = await fetch(`${baseUrl}/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    })
+
+    const data = await parseResponse(res)
+
+    if (!res.ok) {
+      console.error(`Backend devolvió error: ${res.status} - ${JSON.stringify(data)}`)
+
+      return NextResponse.json(
+        {
+          step: 'employee_status_update',
+          error: data?.error || 'status_update_error',
+          message: data?.detail || data?.message || 'Error al actualizar status'
+        },
+        { status: res.status }
+      )
+    }
+
+    return NextResponse.json(data, { status: 200 })
+  } catch (err) {
+    console.error('Error en /api/empleados/status/[id]:', err)
+
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}

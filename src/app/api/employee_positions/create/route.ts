@@ -1,0 +1,80 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_EMPLOYEE || 'http://localhost:8091/'
+
+// Helper function to parse response data
+async function parseResponse(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (contentType?.includes('application/json')) {
+    return await response.json()
+  }
+
+  return { message: await response.text() }
+}
+
+// Helper function to validate token from cookies
+function getTokenFromCookies(req: NextRequest) {
+  const token = req.cookies.get('one21_token')?.value
+
+  if (!token) {
+    return NextResponse.json(
+      { step: 'auth', message: 'Token no encontrado. Por favor inicia sesión.' },
+      { status: 401 }
+    )
+  }
+
+  return token
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    // Validate and get token
+    const tokenResult = getTokenFromCookies(req)
+
+    if (tokenResult instanceof NextResponse) {
+      return tokenResult
+    }
+
+    const token = tokenResult
+
+    const body = await req.json()
+
+    const res = await fetch(`${baseUrl}/job-position`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+
+    // Algunos controladores devuelven 204 sin cuerpo
+    if (res.status === 204) {
+      return NextResponse.json({ message: 'Puesto creado con éxito' }, { status: 201 })
+    }
+
+    const data = await parseResponse(res)
+
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          step: 'job_position_create',
+          error: data?.error || 'job_position_create_error',
+          message: data?.detail || data?.message || 'Error al crear puesto'
+        },
+        { status: res.status }
+      )
+    }
+
+    return NextResponse.json({ message: 'Puesto creado con éxito', data }, { status: 201 })
+  } catch (err) {
+    console.error('Error POST /employee_positions/create:', err)
+
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}

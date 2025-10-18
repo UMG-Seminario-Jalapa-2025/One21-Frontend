@@ -34,6 +34,10 @@ import CustomTextField from '@core/components/mui/TextField'
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
+import { useLoading } from "@/components/ui/LoadingModal"
+
+import { showAlert } from "@/components/ui/AlertProvider"
+
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
   zIndex: 2,
@@ -60,14 +64,15 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { esperar, finEspera } = useLoading()
 
   // Vars
   const darkImg = '/images/pages/auth-mask-dark.png'
   const lightImg = '/images/pages/auth-mask-light.png'
-  const darkIllustration = '/images/illustrations/auth/v2-login-dark.png'
-  const lightIllustration = '/images/illustrations/auth/v2-login-light.png'
-  const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
-  const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
+  const lightIllustration = '/images/project/logo.png'
+  const darkIllustration = '/images/project/logoWhite.png'
+  const borderedLightIllustration = '/images/project/logo.png'
+  const borderedDarkIllustration = '/images/project/logoWhite.png'
 
   // Hooks
   const router = useRouter()
@@ -94,6 +99,8 @@ const handleSubmit = async (e: FormEvent) => {
   setLoading(true)
 
   try {
+    esperar()
+
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -103,14 +110,21 @@ const handleSubmit = async (e: FormEvent) => {
     const data = await res.json()
 
     if (!res.ok) {
+      showAlert("error", "Credenciales inválidas")
+
       throw new Error(data?.message || 'Error de autenticación')
     }
 
     // Redirigir si login fue exitoso (el token ya está en cookie)
-    router.replace('/home')
+    showAlert("success", "Login exitoso")
+
+    router.replace('/inicio')
+    finEspera()
   } catch (err: any) {
+
     console.log(err.message || 'Error de autenticación')
   } finally {
+    finEspera()
     setLoading(false)
   }
 }
@@ -184,6 +198,14 @@ const handleSubmit = async (e: FormEvent) => {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
+
+          <div className='flex justify-center items-center gap-2 mt-4'>
+            <Typography>¿No tienes cuenta?</Typography>
+            <Link href='/register' className='text-primary'>
+              Crear cuenta
+            </Link>
+          </div>
+
         </div>
       </div>
     </div>
