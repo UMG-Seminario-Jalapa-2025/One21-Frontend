@@ -23,7 +23,11 @@ export default function CreateCountryPage() {
     is_active: true
   })
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
 
   const router = useRouter()
 
@@ -36,8 +40,14 @@ export default function CreateCountryPage() {
       return
     }
 
-    try {
+    // Validación adicional: código telefónico solo numérico
+    if (!/^[0-9]+$/.test(formData.phone_code)) {
+      setSnackbar({ open: true, message: 'El código telefónico solo puede contener números', severity: 'error' })
 
+      return
+    }
+
+    try {
       const res = await fetch('/api/business-partner/countries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,28 +70,53 @@ export default function CreateCountryPage() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <CustomTextField label="Código" value={formData.code}
-              onChange={e => setFormData({ ...formData, code: e.target.value })} />
-            <CustomTextField label="Nombre" value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <CustomTextField label="Código telefónico" value={formData.phone_code}
-              onChange={e => setFormData({ ...formData, phone_code: e.target.value })} />
+            <CustomTextField
+              label="Código"
+              value={formData.code}
+              onChange={e => setFormData({ ...formData, code: e.target.value })}
+            />
+            <CustomTextField
+              label="Nombre"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+            />
+            <CustomTextField
+              label="Código telefónico"
+              value={formData.phone_code}
+              onChange={e => {
+                // Elimina todo lo que no sea número
+                const numericValue = e.target.value.replace(/\D/g, '')
+
+                setFormData({ ...formData, phone_code: numericValue })
+              }}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
             <FormControlLabel
               control={
-                <Switch checked={formData.is_active}
-                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })} />
+                <Switch
+                  checked={formData.is_active}
+                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                />
               }
               label="Activo"
             />
             <div className="flex justify-end gap-2">
-              <Button onClick={() => router.push('/countries')} variant="outlined" color="error">Cancelar</Button>
-              <Button type="submit" variant="contained" color="primary">Guardar</Button>
+              <Button onClick={() => router.push('/countries')} variant="outlined" color="error">
+                Cancelar
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                Guardar
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
