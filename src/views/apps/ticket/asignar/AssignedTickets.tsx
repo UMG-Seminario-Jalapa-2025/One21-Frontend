@@ -26,6 +26,8 @@ import styles from '@core/styles/table.module.css'
 // Custom Hooks
 import { useLoading } from '@/components/ui/LoadingModal'
 
+import { showAlert } from "@/components/ui/AlertProvider"
+
 // -----------------------------
 // Tipos
 // -----------------------------
@@ -111,7 +113,7 @@ const AssignedTickets = () => {
   // -----------------------------
   const rechazarTicket = async () => {
     if (!selectedTicket || !justificacion.trim()) {
-      alert('Por favor ingrese una justificación')
+      showAlert('error', 'Por favor ingrese una justificación')
 
       return
     }
@@ -141,7 +143,7 @@ const AssignedTickets = () => {
 
       if (!res.ok) {
         console.error('Error del servidor:', result)
-        alert(result.message || 'Error al rechazar el ticket')
+        showAlert('error', result.message || 'Error al rechazar el ticket')
         finEspera()
 
         return
@@ -150,14 +152,14 @@ const AssignedTickets = () => {
       // ✅ Actualización local - remover ticket de la lista
       setData(prev => prev.filter(t => t.id !== selectedTicket.id))
 
-      alert('Ticket rechazado exitosamente')
+      showAlert('success', 'Ticket rechazado exitosamente')
       setOpenRejectModal(false)
       setSelectedTicket(null)
       setJustificacion('')
       finEspera()
     } catch (error) {
       console.error('Error en rechazarTicket:', error)
-      alert(`Error al rechazar el ticket: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      showAlert('error', 'Error al rechazar el ticket')
       finEspera()
     }
   }
