@@ -101,7 +101,14 @@ export default function CountriesPage() {
     () => [
       columnHelper.accessor('code', { header: 'Código' }),
       columnHelper.accessor('name', { header: 'Nombre' }),
-      columnHelper.accessor('phoneCode', { header: 'Teléfono' }),
+      columnHelper.accessor('phoneCode', {
+      header: 'Teléfono',
+      cell: info => {
+        const value = info.getValue()
+        
+        return value ? `+${value}` : ''
+      }
+    }),
       columnHelper.accessor('isActive', {
         header: 'Activo',
         cell: info => (info.getValue() ? 'Sí' : 'No')

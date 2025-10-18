@@ -29,16 +29,21 @@ export default function EditCountryPage() {
 
   const [loading, setLoading] = useState(true)
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
 
   useEffect(() => {
     const fetchCountry = async () => {
       try {
         const res = await fetch(`/api/business-partner/countries/${id}`)
-
+        
         if (!res.ok) throw new Error('Error al obtener país')
-        const data = await res.json()
 
+        const data = await res.json()
+        
         setFormData(data)
       } catch (err) {
         console.error(err)
@@ -55,12 +60,22 @@ export default function EditCountryPage() {
 
     if (!formData.code.trim() || !formData.name.trim() || !formData.phoneCode.trim()) {
       setSnackbar({ open: true, message: 'Todos los campos son obligatorios', severity: 'error' })
+      
+      return
+    }
+
+    // ✅ Validar que el código telefónico sea solo numérico
+    if (!/^[0-9]+$/.test(formData.phoneCode)) {
+      setSnackbar({
+        open: true,
+        message: 'El código telefónico solo puede contener números',
+        severity: 'error'
+      })
 
       return
     }
 
     try {
-
       const res = await fetch(`/api/business-partner/countries/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -69,11 +84,20 @@ export default function EditCountryPage() {
 
       if (!res.ok) throw new Error('Error al actualizar país')
 
-      setSnackbar({ open: true, message: 'País actualizado con éxito', severity: 'success' })
+      setSnackbar({
+        open: true,
+        message: 'País actualizado con éxito',
+        severity: 'success'
+      })
+
       setTimeout(() => router.push('/countries'), 1000)
     } catch (err) {
       console.error(err)
-      setSnackbar({ open: true, message: 'Error al actualizar país', severity: 'error' })
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar país',
+        severity: 'error'
+      })
     }
   }
 
@@ -87,32 +111,69 @@ export default function EditCountryPage() {
 
   return (
     <div className="p-6">
-      <Typography variant="h4" gutterBottom>Editar País</Typography>
+      <Typography variant="h4" gutterBottom>
+        Editar País
+      </Typography>
+
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <CustomTextField label="Código" value={formData.code}
-              onChange={e => setFormData({ ...formData, code: e.target.value })} />
-            <CustomTextField label="Nombre" value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <CustomTextField label="Código telefónico" value={formData.phoneCode}
-              onChange={e => setFormData({ ...formData, phoneCode: e.target.value })} />
+            <CustomTextField
+              label="Código"
+              value={formData.code}
+              onChange={e => setFormData({ ...formData, code: e.target.value })}
+            />
+
+            <CustomTextField
+              label="Nombre"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+            />
+
+            <CustomTextField
+              label="Código telefónico"
+              value={formData.phoneCode}
+              onChange={e => {
+                // 🔢 Elimina cualquier carácter que no sea número
+                const numericValue = e.target.value.replace(/\D/g, '')
+
+                setFormData({ ...formData, phoneCode: numericValue })
+              }}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+
             <FormControlLabel
               control={
-                <Switch checked={formData.isActive}
-                  onChange={e => setFormData({ ...formData, isActive: e.target.checked })} />
+                <Switch
+                  checked={formData.isActive}
+                  onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                />
               }
               label="Activo"
             />
+
             <div className="flex justify-end gap-2">
-              <Button onClick={() => router.push('/countries')} variant="outlined" color="error">Cancelar</Button>
-              <Button type="submit" variant="contained" color="primary">Actualizar</Button>
+              <Button
+                onClick={() => router.push('/countries')}
+                variant="outlined"
+                color="error"
+              >
+                Cancelar
+              </Button>
+
+              <Button type="submit" variant="contained" color="primary">
+                Actualizar
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
