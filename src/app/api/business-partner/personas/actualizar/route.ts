@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-      return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
-    }
+
+    // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+    //   return NextResponse.json({ step: 'email', message: 'El email de contacto no es válido' }, { status: 400 })
+    // }
 
     const baseUrlPather = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
