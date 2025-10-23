@@ -47,12 +47,12 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    if (!body.rejectionReason || body.rejectionReason.trim().length === 0) {
-      return NextResponse.json(
-        { step: 'validation', message: 'La justificación del rechazo es requerida.' },
-        { status: 400 }
-      )
-    }
+    // if (!body.rejectionReason || body.rejectionReason.trim().length === 0) {
+    //   return NextResponse.json(
+    //     { step: 'validation', message: 'La justificación del rechazo es requerida.' },
+    //     { status: 400 }
+    //   )
+    // }
 
     console.log('🚫 Rechazando ticket:', body.id)
 
