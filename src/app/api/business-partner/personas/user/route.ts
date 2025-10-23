@@ -1,49 +1,21 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-
-    const username = process.env.NEXT_PUBLIC_INGRESS_CLIENT_USERNAME
-    const password = body.password || process.env.NEXT_PUBLIC_INGRESS_CLIENT_PASSWORD
-    const tenant = body.tenant || process.env.NEXT_PUBLIC_INGRESS_CLIENT_TENANT
+    const cookieStore = await cookies()
+    const tokenCookie = cookieStore.get(process.env.AUTH_COOKIE_NAME || 'one21_token')
 
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081/api/'
     const baseUrlPather = process.env.NEXT_PUBLIC_API_BASE_URL_SERVICE || 'http://localhost:8090/'
 
-    // 1. Login
-    const loginRes = await fetch(`${baseUrl}auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_INGRESS_CLIENT_FIXED_TOKEN}`
-      },
-      body: JSON.stringify({ username, password, tenant })
-    })
-
-    let loginData: any
-    const contentType = loginRes.headers.get('content-type')
-
-    if (contentType && contentType.includes('application/json')) {
-      loginData = await loginRes.json()
-    } else {
-      loginData = { message: await loginRes.text() }
+    if (!tokenCookie?.value) {
+      return NextResponse.json({ step: 'auth', message: 'Token no encontrado en cookies' }, { status: 401 })
     }
 
-    if (!loginRes.ok) {
-      return NextResponse.json(
-        { step: 'login', message: loginData?.message || 'Error al autenticar' },
-        { status: loginRes.status }
-      )
-    }
-
-    const token = loginData?.access_token
-
-    if (!token) {
-      
-      return NextResponse.json({ step: 'login', message: 'Token no recibido' }, { status: 401 })
-    }
+    const token = tokenCookie.value
 
     // 2. Crear usuario
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
