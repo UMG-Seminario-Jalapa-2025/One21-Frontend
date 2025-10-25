@@ -13,7 +13,7 @@ describe('Login fallido', () => {
 
     cy.contains('button', 'Login').click();
 
-    cy.contains('Correo o contraseña incorrectos', { timeout: 8000 })
+    cy.contains('Credenciales inválidas', { timeout: 8000 })
       .should('be.visible');
       
     cy.url().should('eq', 'https://dev.one21.app/login');

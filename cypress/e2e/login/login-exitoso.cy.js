@@ -13,6 +13,6 @@ describe('Inicio de sesión exitoso', () => {
     cy.contains('button', 'Login').click();
 
     
-    cy.url().should('include', '/home');
+    cy.url().should('include', '/inicio');
   });
 });
