@@ -1,5 +1,3 @@
-// app/api/tickets/asignaciones/rechazar/route.ts
-
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -47,16 +45,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // if (!body.rejectionReason || body.rejectionReason.trim().length === 0) {
-    //   return NextResponse.json(
-    //     { step: 'validation', message: 'La justificación del rechazo es requerida.' },
-    //     { status: 400 }
-    //   )
-    // }
-
-    console.log('🚫 Rechazando ticket:', body.id)
-
-    // ===================== 1️⃣ Construir payload para rechazo =====================
+    // ===================== 1️⃣ Construir payload limpio =====================
     const payload = {
       id: body.id,
       ticketNumber: body.ticketNumber,
@@ -68,54 +57,56 @@ export async function PUT(req: NextRequest) {
       contactEmail: body.contactEmail,
       contactPhone: body.contactPhone,
       createdByEmployeeId: body.createdByEmployeeId,
-      assignedToEmployeeId: body.assignedToEmployeeId,
+      assignedToEmployeeId: body.assignedToEmployeeId, // 🔹 este es el que cambia
       openedAt: body.openedAt,
-      closedAt: new Date().toISOString(), // 🔹 Marcar como cerrado
+      closedAt: body.closedAt,
       slaDueAt: body.slaDueAt,
-      resolutionSummary: body.rejectionReason, // 🔹 Guardar justificación aquí
+      resolutionSummary: body.resolutionSummary,
       satisfactionRating: body.satisfactionRating,
       feedback: body.feedback,
       isEscalated: body.isEscalated,
       parentTicket: body.parentTicket ? { id: body.parentTicket.id } : null,
       category: body.category ? { id: body.category.id } : null,
       priority: body.priority ? { id: body.priority.id } : null,
-      status: { id: 3 } // 🔹 Estado "Rechazado" - ajusta el ID según tu BD
+      status: body.status ? { id: body.status.id } : null,
     }
 
-    console.log('📦 Payload:', payload)
+  
 
     // ===================== 2️⃣ Hacer PUT al microservicio =====================
     const response = await fetch(`${baseUrlTickets}tickets`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     })
 
     const data = await parseResponse(response)
 
     if (!response.ok) {
-      console.error('❌ Error del backend:', data)
-
       return NextResponse.json(
         {
-          step: 'tickets_reject',
-          error: data?.error || 'ticket_reject_error',
-          message: data?.message || 'Error al rechazar ticket'
+          step: 'tickets_update',
+          error: data?.error || 'ticket_update_error',
+          message: data?.message || 'Error al asignar ticket',
         },
         { status: response.status }
       )
     }
 
     // ===================== 3️⃣ Éxito =====================
-    console.log('✅ Ticket rechazado exitosamente')
-
-    return NextResponse.json({ message: 'Ticket rechazado correctamente', data }, { status: 200 })
+    return NextResponse.json(
+      { message: 'Ticket asignado correctamente', data },
+      { status: 200 }
+    )
   } catch (err) {
-    console.error('❌ Error en /api/tickets/asignaciones/rechazar:', err)
+    console.error('❌ Error en /api/tickets/asignaciones/asignar:', err)
 
-    return NextResponse.json({ step: 'server', message: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json(
+      { step: 'server', message: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
