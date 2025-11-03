@@ -145,7 +145,7 @@ const RegisterMultiSteps = ({ mode }: { mode: SystemMode }) => {
       // Datos adicionales para contactos
       phones: formData.phones || [],
 
-      realmRoles: ["client-one21"], // 🔥 fijo
+      realmRoles: ["client"], // 🔥 fijo
     }
 
     console.log("Guardando datos...", payload)
