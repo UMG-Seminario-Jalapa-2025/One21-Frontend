@@ -80,8 +80,6 @@ export default function PersonasPage() {
         realmRoles
       }
 
-      payload.realmRoles = ['employee'];
-
       const res = await fetch('/api/business-partner/personas/asignarRol', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
