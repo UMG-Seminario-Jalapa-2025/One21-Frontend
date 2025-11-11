@@ -10,9 +10,10 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "build:icons": "tsx src/assets/iconify-icons/bundle-icons-css.ts"
+    "build:icons": "tsx src/assets/iconify-icons/bundle-icons-css.ts",
+    "check:middleware": "node ./scripts/check-middleware.js"
   },
-   "dependencies": {
+  "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
     "@emoji-mart/data": "1.2.1",
     "@emoji-mart/react": "1.1.1",
@@ -75,9 +76,9 @@
     "recharts": "2.15.0",
     "server-only": "0.0.1",
     "valibot": "0.42.1",
-     "cookie": "^1.0.2",
-     "jose": "^6.0.13"
-   },
+    "cookie": "^1.0.2",
+    "jose": "^6.0.13"
+  },
   "devDependencies": {
     "@iconify/json": "2.2.286",
     "@iconify/tools": "4.1.1",
