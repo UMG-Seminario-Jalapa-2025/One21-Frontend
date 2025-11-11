@@ -199,12 +199,12 @@ const handleSubmit = async (e: FormEvent) => {
             </Button>
           </form>
 
-          {/* <div className='flex justify-center items-center gap-2 mt-4'>
-            <Typography>¿No tienes cuenta?</Typography>
-            <Link href='/register' className='text-primary'>
-              Crear cuenta
+            <div className='flex justify-center items-center gap-2 mt-4'>
+            <Typography>¿Olvidaste tu contraseña?</Typography>
+            <Link href='https://keycloak.one21.app/realms/One21/login-actions/reset-credentials?client_id=one21&redirect_uri=https://one21.app/login ' className='text-primary'>
+              Restablecer contraseña
             </Link>
-          </div> */}
+          </div> 
 
         </div>
       </div>
