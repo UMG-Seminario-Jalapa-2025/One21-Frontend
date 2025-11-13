@@ -5,16 +5,65 @@ console.log('### src/middleware_impl.ts loaded (implementation) ###')
 
 // Define which roles are required for which paths
 const roleGuards = [
+  // Inicio
   {
-    path: '/admin',
-    roles: ['admin']
+    path: '/inicio',
+    roles: ['app-admin','default-roles-master', 'uma_authorization', 'client', 'employee']
+  },
+
+  // Empleados
+  {
+    path: '/Empleados',
+    roles: ['app-admin']
+  },
+
+  // Personas
+  {
+    path: '/personas',
+    roles: ['app-admin']
+  },
+
+  // Ticket – Submódulo
+  {
+    path: '/ticket/crear',
+    roles: ['app-admin', 'client', 'employee', 'uma_authorization']
   },
   {
-    path: '/roles',
+    path: '/ticket/ver-todos',
     roles: ['app-admin']
   },
   {
+    path: '/ticket/ver-cliente',
+    roles: ['client', 'app-admin', 'uma_authorization']
+  },
+  {
+    path: '/ticket/asignar',
+    roles: ['app-admin']
+  },
+  {
+    path: '/kanban',
+    roles: ['employee']
+  },
+  {
+    path: '/prioridades',
+    roles: ['app-admin']
+  },
+  {
+    path: '/categorias',
+    roles: ['app-admin']
+  },
+  {
+    path: '/status',
+    roles: ['app-admin']
+  },
+
+  // Configuración
+  {
     path: '/countries',
+    roles: ['app-admin']
+  },
+  {
+    path: '/roles',
     roles: ['app-admin']
   },
   {
@@ -33,7 +82,7 @@ const roleGuards = [
     path: '/municipalities',
     roles: ['app-admin']
   }
-]
+];
 
 export function middleware(request: NextRequest) {
   console.log('*******************************************')
