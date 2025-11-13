@@ -1,170 +1,84 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-console.log('### src/middleware_impl.ts loaded (implementation) ###')
-
-// Define which roles are required for which paths
 const roleGuards = [
-  // Inicio
-  {
-    path: '/inicio',
-    roles: ['app-admin','default-roles-master', 'uma_authorization', 'client', 'employee']
-  },
-
-  // Empleados
-  {
-    path: '/Empleados',
-    roles: ['app-admin']
-  },
-
-  // Personas
-  {
-    path: '/personas',
-    roles: ['app-admin']
-  },
-
-  // Ticket – Submódulo
-  {
-    path: '/ticket/crear',
-    roles: ['app-admin', 'client', 'employee', 'uma_authorization']
-  },
-  {
-    path: '/ticket/ver-todos',
-    roles: ['app-admin']
-  },
-  {
-    path: '/ticket/ver-cliente',
-    roles: ['client', 'app-admin', 'uma_authorization']
-  },
-  {
-    path: '/ticket/asignar',
-    roles: ['app-admin']
-  },
-  {
-    path: '/kanban',
-    roles: ['employee']
-  },
-  {
-    path: '/prioridades',
-    roles: ['app-admin']
-  },
-  {
-    path: '/categorias',
-    roles: ['app-admin']
-  },
-  {
-    path: '/status',
-    roles: ['app-admin']
-  },
-
-  // Configuración
-  {
-    path: '/countries',
-    roles: ['app-admin']
-  },
-  {
-    path: '/roles',
-    roles: ['app-admin']
-  },
-  {
-    path: '/job_position',
-    roles: ['app-admin']
-  },
-  {
-    path: '/employee_departaments',
-    roles: ['app-admin']
-  },
-  {
-    path: '/departments',
-    roles: ['app-admin']
-  },
-  {
-    path: '/municipalities',
-    roles: ['app-admin']
-  }
-];
+  { path: '/inicio', roles: ['app-admin','default-roles-master', 'uma_authorization', 'client', 'employee'] },
+  { path: '/Empleados', roles: ['app-admin'] },
+  { path: '/personas', roles: ['app-admin'] },
+  { path: '/ticket/crear', roles: ['app-admin','client','employee','uma_authorization'] },
+  { path: '/ticket/ver-todos', roles: ['app-admin'] },
+  { path: '/ticket/ver-cliente', roles: ['client','app-admin','uma_authorization'] },
+  { path: '/ticket/asignar', roles: ['app-admin'] },
+  { path: '/kanban', roles: ['employee'] },
+  { path: '/prioridades', roles: ['app-admin'] },
+  { path: '/categorias', roles: ['app-admin'] },
+  { path: '/status', roles: ['app-admin'] },
+  { path: '/countries', roles: ['app-admin'] },
+  { path: '/roles', roles: ['app-admin'] },
+  { path: '/job_position', roles: ['app-admin'] },
+  { path: '/employee_departaments', roles: ['app-admin'] },
+  { path: '/departments', roles: ['app-admin'] },
+  { path: '/municipalities', roles: ['app-admin'] }
+]
 
 export function middleware(request: NextRequest) {
-  console.log('*******************************************')
-  console.log('****** EL MIDDLEWARE SE ESTÁ EJECUTANDO ******')
-  console.log('*******************************************')
-
   const token = request.cookies.get('one21_token')?.value
-  const rawPathname = request.nextUrl.pathname
-  const basePathEnv = process.env.BASEPATH || ''
-  let pathname = rawPathname
+  const rawPath = request.nextUrl.pathname
+  const basePath = process.env.BASEPATH || ""
+  let pathname = rawPath
 
-  
-  if (basePathEnv) {
-    const normalizedBase = basePathEnv.startsWith('/') ? basePathEnv : `/${basePathEnv}`
-
+  if (basePath) {
+    const normalizedBase = basePath.startsWith("/") ? basePath : `/${basePath}`
+    
     if (pathname.startsWith(normalizedBase)) {
-      pathname = pathname.slice(normalizedBase.length) || '/'
+      pathname = pathname.replace(normalizedBase, "") || "/"
     }
   }
 
-  
-  if (!token && pathname !== '/login') {
-    const res = NextResponse.redirect(new URL('/login', request.url))
+  const STATIC_PREFIXES = [
+    "/_next",
+    "/favicon.ico",
+    "/assets",
+    "/public",
+    "/images",
+    "/fonts"
+  ]
 
-    res.headers.set('x-one21-middleware', 'redirect-to-login')
-    
-    return res
+  const fullPath = rawPath
+
+  if (STATIC_PREFIXES.some(prefix => fullPath.startsWith(`${basePath}${prefix}`))) {
+    return NextResponse.next()
   }
 
-  
+  if (fullPath.startsWith(`${basePath}/api`)) {
+    return NextResponse.next()
+  }
+
+  if (!token && pathname !== "/login") {
+    return NextResponse.redirect(new URL(`${basePath}/login`, request.url))
+  }
+
+  if (token && pathname === "/login") {
+    return NextResponse.redirect(new URL(`${basePath}/inicio`, request.url))
+  }
+
   if (token) {
-    
-    if (pathname === '/login') {
-
-      const res = NextResponse.redirect(new URL('/inicio', request.url))
-
-      res.headers.set('x-one21-middleware', 'redirect-to-inicio')
-      
-      return res
-    }
-
-    
-    const rolesCookie = request.cookies.get('one21_roles')?.value
+    const rolesCookie = request.cookies.get("one21_roles")?.value
     const userRoles = rolesCookie ? JSON.parse(rolesCookie) : []
+    const routeProtected = roleGuards.find(r => pathname.startsWith(r.path))
 
-    
-    const protectedRoute = roleGuards.find(guard => pathname.startsWith(guard.path))
+    if (routeProtected) {
+      const ok = routeProtected.roles.some(role => userRoles.includes(role))
 
-    
-    if (protectedRoute) {
-      const hasRequiredRole = protectedRoute.roles.some(requiredRole => userRoles.includes(requiredRole))
-
-      if (!hasRequiredRole) {
-
-        console.log(`🚫 Acceso denegado a ${pathname} para roles: ${userRoles.join(', ')}`)
-
-        const res = NextResponse.redirect(new URL('/inicio', request.url))
-        
-        res.headers.set('x-one21-middleware', 'forbidden-role')
-        
-        return res
+      if (!ok) {
+        return NextResponse.redirect(new URL(`${basePath}/inicio`, request.url))
       }
     }
   }
 
-  const res = NextResponse.next()
-
-  res.headers.set('x-one21-middleware', 'active')
-
-  
-  try {
-    if (process.env.NODE_ENV !== 'production') {
-      res.cookies.set('one21_middleware', '1', { path: '/' })
-    }
-  } catch (e) {
-    console.warn('No se pudo setear cookie de depuración en middleware:', e)
-  }
-
-  
-  return res
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 }
