@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+
 import { usePathname, useRouter } from 'next/navigation'
 
 // Lista de rutas que no queremos proteger con esta lógica.
