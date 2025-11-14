@@ -191,7 +191,7 @@ export default function EmpleadosPage() {
 
     return empleados.filter(
       e =>
-        e.nombre.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.telefono.toLowerCase().includes(q)
+        e.nombre.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)
     )
   }, [query, empleados])
 
@@ -200,7 +200,6 @@ export default function EmpleadosPage() {
     () => [
       columnHelper.accessor('nombre', { header: 'Nombre' }),
       columnHelper.accessor('email', { header: 'Correo Electrónico' }),
-      columnHelper.accessor('telefono', { header: 'Teléfono' }),
       columnHelper.accessor('fecha', {
         header: 'Fecha',
         cell: info => {

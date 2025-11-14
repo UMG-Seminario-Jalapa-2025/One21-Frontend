@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     // === Paso 2: Asignar rol dinámico ===
     const rolePayload = {
       email: body.email,
-      realmRoles: ['employee']
+      realmRoles: realmRoles
     }
 
     const roleRes = await fetch(`${baseUrl}admin/users/by-email/roles`, {
