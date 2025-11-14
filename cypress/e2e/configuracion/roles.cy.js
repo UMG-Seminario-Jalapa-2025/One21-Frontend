@@ -337,7 +337,7 @@ cy.get('input[placeholder="Ej: Doctor role"], textarea[placeholder*=" "]')
 
       cy.contains('button', /^Guardar$/i).click();
 
-      cy.contains(/ya existe|duplicado|error|no se pudo/i, { timeout: 8000 }).should(
+      cy.contains(/Role with name d already exists|duplicado|error|no se pudo/i, { timeout: 8000 }).should(
         'be.visible'
       );
     });

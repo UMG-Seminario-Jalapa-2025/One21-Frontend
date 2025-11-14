@@ -30,7 +30,8 @@ Cypress.on('uncaught:exception', (err, runnable) => {
   
     usuarios.forEach((usuario) => {
       it(`Debe iniciar sesión correctamente como ${usuario.rol}`, () => {
-        cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
   
         // Validar que el campo de correo esté visible
         cy.get('input[placeholder="Ingresa tu correo electronico"]')

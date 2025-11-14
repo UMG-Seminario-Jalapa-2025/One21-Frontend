@@ -1,10 +1,10 @@
 // cypress/e2e/validacion-prioridades-encabezados.cy.js
 describe('Prioridades - Encabezados requeridos', () => {
-  const base = 'https://dev.one21.app';
+    const { baseUrl } = require('../../support/urls');
 
   it('Muestra CÓDIGO, NOMBRE, NIVEL (ACCIONES opcional)', () => {
     // 1) Login (tolerante a UI)
-    cy.visit(`${base}/login`, { failOnStatusCode: false });
+    cy.visit(`${baseUrl}/login`, { failOnStatusCode: false });
 
     cy.get('input[placeholder*="correo"]', { timeout: 20000 })
       .should('exist')               // evitamos flaky "be.visible"

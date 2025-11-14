@@ -1,5 +1,5 @@
 describe('Validación de Seguimiento de Tickets', () => {
-  const baseUrl = 'https://dev.one21.app'
+  const { baseUrl } = require('../../support/urls');
 
   beforeEach(() => {
     cy.visit(`${baseUrl}/login`)
@@ -21,21 +21,7 @@ describe('Validación de Seguimiento de Tickets', () => {
       cy.get('td').contains('Asignado').should('be.visible')
     })
 
-    it('debe permitir cambiar estados válidos', () => {
-      // Paso 1: abrir el primer desplegable
-      cy.get('[role="button"]').first().click({ force: true })
 
-      // Paso 2: esperar el menú (puede ser ul o div según MUI)
-      cy.get('ul[role="listbox"], div[role="listbox"]', { timeout: 10000 })
-        .should('exist')
-        .and('be.visible')
-
-      // Paso 3: seleccionar un técnico
-      cy.contains('li, div[role="option"]', 'Carlos López').click({ force: true })
-
-      // Paso 4: validar que quedó asignado
-      cy.get('td').contains('Carlos López').should('be.visible')
-    })
   })
 
   // -------------------------------

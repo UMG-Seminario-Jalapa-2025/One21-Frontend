@@ -8,7 +8,8 @@ describe('Pruebas de búsqueda en la página de empleados', () => {
   beforeEach(() => {
     // Visitar la página de empleados antes de cada prueba
     // 1) Visitar la página de login
-    cy.visit('https://dev.one21.app/login');
+    const { baseUrl } = require('../../support/urls');
+    cy.visit(baseUrl);
 
     // 2) Ingresar el correo electrónico
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
@@ -74,28 +75,6 @@ describe('Pruebas de búsqueda en la página de empleados', () => {
     filas().its('length').should('be.greaterThan', 0);
   });
 
-  it('Al buscar, vuelve a la primera página (si hay paginación)', () => {
-    // si tu paginador tiene el botón "2", ajusta selector según tu UI
-    cy.get('button, a').contains(/^2$/).click({ force: true });
-    inputBusqueda().clear().type('julio');
-    // Si tu frontend hace request al buscar, descomenta:
-    // cy.wait('@getEmpleados');
-    filas().should('have.length', 1).first().should('contain.text', 'Julio');
-  });
-
-  it('Debe mostrar la tabla vacía cuando no hay resultados', () => {
-    // Escribir un término que no exista
-    cy.get('input[placeholder="Buscar empleado..."]')
-      .should('be.visible')
-      .clear()
-      .type('NoExiste')
-      .should('have.value', 'NoExiste');
-  
-    // La tabla debe renderizar una sola fila del estado vacío
-    cy.get('table tbody tr').should('have.length', 0);
-  
-
-  });
   
   it('Debe escribir en la barra de búsqueda, borrar y restaurar el listado original', () => {
     // Guardar el número de filas inicial

@@ -8,7 +8,8 @@ describe('Módulo Empleados - QA: Validación de carga de información v2', () =
   // Ejecutar login antes de cada prueba y navegar al módulo Empleados
   beforeEach(() => {
     // 1) Ir a login
-    cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
 
     // 2) Ingresar correo electrónico
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
