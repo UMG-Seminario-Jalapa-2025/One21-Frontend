@@ -6,7 +6,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 })
 
 describe('Validación de Eliminación de Empleado v2', () => {
-  const baseUrl = 'https://dev.one21.app'
+  const { baseUrl } = require('../../support/urls');
 
   beforeEach(() => {
     // 1) Ir a login

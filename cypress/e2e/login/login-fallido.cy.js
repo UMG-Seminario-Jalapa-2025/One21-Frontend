@@ -1,7 +1,8 @@
 
 describe('Login fallido', () => {
   it('Debe mostrar mensaje de error y no permitir acceso', () => {
-    cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
 
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')

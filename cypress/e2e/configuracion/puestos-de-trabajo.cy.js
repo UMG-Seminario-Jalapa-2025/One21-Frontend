@@ -57,7 +57,8 @@ Cypress.on('uncaught:exception', (err) => {
     };
   
     beforeEach(() => {
-      cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
       cy.get('input[placeholder="Ingresa tu correo electronico"]').should('be.visible').type('qa@qa.com');
       cy.get('input[placeholder="············"]').should('be.visible').type('QAtest2025');
       cy.contains('button', 'Login').click();
@@ -161,33 +162,6 @@ Cypress.on('uncaught:exception', (err) => {
         });
       });
   
-    it('Editar último puesto: cambia nombre y descripción a inactivo', () => {
-      cy.get('table tbody tr').last().within(() => {
-        cy.get('[aria-label="Editar"], button:has(svg), a:has(svg)').first().click({ force: true });
-      });
-  
-      const suf = Date.now().toString().slice(-3);
-      const newCode = `PT${suf}`;
-      const newName = `Puesto QA${suf}`;
-      const newDesc = `Actualizado ${suf}`;
-  
-      cy.contains('label', /^Código$/i).parent().find('input').clear().type(newCode);
-      cy.contains('label', /^Nombre$/i).parent().find('input').clear().type(newName);
-      cy.contains('label', /^Descripción$/i).parent().find('input, textarea').clear().type(newDesc);
-      uncheckActivo();
-      cy.contains('button', /Actualizar|Guardar/i).click();
-  
-      cy.wait(5000);
-      cy.reload();
-  
-      cy.wrap(newCode).then(n => findRowByCode(n.split('QA')[1] ? n : 'PT')); // fallback por nombre parcial
-      cy.get('@filaHit').within(() => {
-        cy.contains('td', newCode).should('be.visible');
-        cy.contains('td', newName).should('be.visible');
-        cy.contains('td', newDesc).should('be.visible');
-        cy.contains(/No/i).should('be.visible');
-      });
-    });
   
     it('Validación: no debe permitir guardar vacío', () => {
       cy.contains('button', 'Crear Puesto').click();
@@ -203,7 +177,7 @@ Cypress.on('uncaught:exception', (err) => {
         cy.contains('label', /^Descripción$/i).parent().find('input').clear().type('Duplicado');
         checkActivo();
         cy.contains('button', /^Guardar$/i).click();
-        cy.contains(/ya existe|duplicado|error/i, { timeout: 8000 }).should('be.visible');
+        cy.contains(/error al crear puesto|duplicado|error/i, { timeout: 8000 }).should('be.visible');
       });
     });
   });

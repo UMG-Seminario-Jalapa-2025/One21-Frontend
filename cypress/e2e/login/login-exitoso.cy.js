@@ -1,6 +1,7 @@
 describe('Inicio de sesión exitoso', () => {
   it('Debe acceder al dashboard con credenciales válidas', () => {
-    cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
 
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')

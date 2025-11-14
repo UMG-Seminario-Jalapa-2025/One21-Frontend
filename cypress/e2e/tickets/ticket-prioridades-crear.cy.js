@@ -1,6 +1,7 @@
 // cypress/e2e/tickets/prioridades_crear_y_verificar.cy.js
 describe('Tickets / Prioridades - Crear y verificar (página 1 ó 2)', () => {
-  const base = 'https://dev.one21.app';
+  const { baseUrl } = require('../../support/urls');
+
   const email = 'qa@qa.com';
   const pass  = 'QAtest2025';
 
@@ -43,28 +44,28 @@ describe('Tickets / Prioridades - Crear y verificar (página 1 ó 2)', () => {
     });
 
   // Si no está en la página actual y existe el número "2", navega a la página 2 y vuelve a buscar
-  const findRowPage1or2 = (code) => {
-    return existsInCurrentPage(code).then(found => {
-      if (found) return cy.get('table tbody tr').contains('td', code).parents('tr');
-
-      // Ir a la página 2 si existe un control con texto "2"
-      return cy.get('body').then($b => {
-        const page2 = [...$b.find('button, a, span')].find(el => (el.textContent || '').trim() === '2');
-        if (!page2) throw new Error(`No se encontró el registro y no existe paginación a "2".`);
-        cy.wrap(page2).click({ force: true });
-        cy.wait(700); // deja que recargue la tabla
-
-        // Reintenta búsqueda en página 2
-        return cy.get('table tbody tr', { timeout: 10000 })
-          .contains('td', code)
-          .parents('tr');
-      });
-    });
-  };
-
+    const findRowPage1or2  = (code) => {
+      const tryFind = () =>
+        cy.get('table tbody tr').then($rows => {
+          const hit = [...$rows].find(tr => tr.innerText.toLowerCase().includes(code.toLowerCase()));
+          if (hit) { cy.wrap(hit).as('filaHit'); return; }
+          return cy.get('button, a')
+            .filter((i, el) => el.innerText.trim() === '>' || el.getAttribute('aria-label') === 'Go to next page')
+            .filter(':visible')
+            .then($next => {
+              if (!$next.length || $next.is('[disabled]') || $next.attr('aria-disabled') === 'true') {
+                throw new Error(`No se encontró el país con código ${code}`);
+              }
+              cy.wrap($next).click({ force: true });
+              return tryFind();
+            });
+        });
+      return tryFind();
+    };
+  
   beforeEach(() => {
     // Login simple y tolerante
-    cy.visit(`${base}/login`, { failOnStatusCode: false });
+    cy.visit(`${baseUrl}/login`, { failOnStatusCode: false });
     cy.get('input[placeholder*="correo"]', { timeout: 20000 }).should('exist').type(email);
     cy.get('input[type="password"]', { timeout: 20000 }).should('exist').type(pass, { log: false });
     cy.contains('button', /^Login$/i, { timeout: 20000 }).click();

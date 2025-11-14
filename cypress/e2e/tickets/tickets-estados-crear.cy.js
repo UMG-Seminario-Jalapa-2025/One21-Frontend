@@ -1,6 +1,6 @@
 // cypress/e2e/tickets/estados_crear.cy.js
 describe('Tickets / Estados - Crear Estado y verificar en listado', () => {
-  const base   = 'https://dev.one21.app';
+  const { baseUrl } = require('../../support/urls');
   const email  = 'qa@qa.com';
   const pass   = 'QAtest2025';
   const path   = '/status';         // <— Ruta correcta del módulo
@@ -23,7 +23,7 @@ describe('Tickets / Estados - Crear Estado y verificar en listado', () => {
         () => cy.url({ timeout: 15000 }).should('include', path),
         () => {
           // fallback directo por URL
-          cy.visit(`${base}${path}`, { failOnStatusCode: false });
+          cy.visit(`${baseUrl}${path}`, { failOnStatusCode: false });
           cy.url({ timeout: 15000 }).should('include', path);
         }
       );
@@ -49,7 +49,7 @@ describe('Tickets / Estados - Crear Estado y verificar en listado', () => {
           });
           cy.url({ timeout: 8000 }).then(url => {
             if (!url.includes(pathNew)) {
-              cy.visit(`${base}${pathNew}`, { failOnStatusCode: false });
+              cy.visit(`${baseUrl}${pathNew}`, { failOnStatusCode: false });
             }
           });
           cy.url({ timeout: 10000 }).should('include', pathNew);
@@ -78,13 +78,30 @@ describe('Tickets / Estados - Crear Estado y verificar en listado', () => {
   };
 
   // ===== Buscar registro por código =====
-  const rowByCode = (code) =>
-    cy.get('table tbody tr', { timeout: 10000 }).contains('td', code).parents('tr');
+  const rowByCode  = (code) => {
+      const tryFind = () =>
+        cy.get('table tbody tr').then($rows => {
+          const hit = [...$rows].find(tr => tr.innerText.toLowerCase().includes(code.toLowerCase()));
+          if (hit) { cy.wrap(hit).as('filaHit'); return; }
+          return cy.get('button, a')
+            .filter((i, el) => el.innerText.trim() === '>' || el.getAttribute('aria-label') === 'Go to next page')
+            .filter(':visible')
+            .then($next => {
+              if (!$next.length || $next.is('[disabled]') || $next.attr('aria-disabled') === 'true') {
+                throw new Error(`No se encontró el país con código ${code}`);
+              }
+              cy.wrap($next).click({ force: true });
+              return tryFind();
+            });
+        });
+      return tryFind();
+    };
+  
 
   // ===== Login antes de cada caso =====
   beforeEach(() => {
     cy.viewport(1440, 900);
-    cy.visit(`${base}/login`, { failOnStatusCode: false });
+    cy.visit(`${baseUrl}/login`, { failOnStatusCode: false });
     cy.get('input[placeholder*="correo"]', { timeout: 20000 }).should('exist').type(email);
     cy.get('input[type="password"]',       { timeout: 20000 }).should('exist').type(pass, { log: false });
     cy.contains('button', /^Login$/i,      { timeout: 20000 }).click();

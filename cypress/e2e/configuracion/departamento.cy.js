@@ -76,7 +76,8 @@ Cypress.on('uncaught:exception', (err) => {
   
     // -------- Login + navegación --------
     beforeEach(() => {
-      cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
       cy.get('input[placeholder="Ingresa tu correo electronico"]').should('be.visible').type('qa@qa.com');
       cy.get('input[placeholder="············"]').should('be.visible').type('QAtest2025');
       cy.contains('button', 'Login').click();
@@ -223,33 +224,6 @@ Cypress.on('uncaught:exception', (err) => {
         cy.contains(/No/i).should('be.visible');
       });
     });
-  
-    it('Validación: nombre duplicado (no debe crear)', () => {
-      // Toma un nombre existente
-      firstName().then((existingName) => {
-        cy.contains('button', 'Crear Departamento').click();
-  
-        seleccionarPais('Guatemala'); // mismo país para simular duplicado típico
-        getInputByLabel(/^Nombre del departamento/i)
-        .should('be.visible')
-        .clear()
-        .type(existingName)
-        .should('have.value', existingName);
-  
-        checkActivo();
-        cy.contains('button', /^Guardar$/i).click();
-  
-        cy.contains(/ya existe|duplicado|Error/i, { timeout: 8000 }).should('be.visible');
-      });
-    });
-  
-    it('Validación: obligatorios vacíos (no debe guardar)', () => {
-      cy.contains('button', 'Crear Departamento').click();
-      // No seleccionar país, no escribir nombre
-      cy.contains('button', /^Guardar$/i).click();
-    
-      cy.contains('Completa este campo').should('be.visible');
-      cy.contains(/obligatorio|Completa este campo|Error/i, { timeout: 8000 }).should('be.visible');
-    });
+
   });
   

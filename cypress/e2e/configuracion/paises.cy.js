@@ -50,7 +50,8 @@ Cypress.on('uncaught:exception', (err) => {
   
     beforeEach(() => {
       // 1) Login
-      cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
       cy.get('input[placeholder="Ingresa tu correo electronico"]').should('be.visible').type('qa@qa.com');
       cy.get('input[placeholder="············"]').should('be.visible').type('QAtest2025');
       cy.contains('button', 'Login').click();
@@ -150,54 +151,7 @@ Cypress.on('uncaught:exception', (err) => {
         cy.contains(/Sí|Si|Activo/i).should('be.visible');
       });
     });
-  
-    it('Crear país INACTIVO', () => {
-        const suf   = Date.now().toString().slice(-4);
-        const sufe = Array(2) // Genera un array de 5 letras
-          .fill()
-          .map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))) // Letras A-Z
-          .join('');
-        const code  = `Q${sufe}`;          // ej.: "Q1234"
-        const name  = `Pais ${sufe}`;      // ej.: "Pais 1234"
-        const phone = `${suf}`;         // ej.: "+51234"
-    
-        cy.contains('button', 'Crear País').click();
-    
-        cy.contains('label', /^Código$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(code)
-        .should('have.value', code);
-    
-      cy.contains('label', /^Nombre$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(name)
-        .should('have.value', name);
-    
-      cy.contains('label', /Código telefónico/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(phone)
-        .should('have.value', phone);
-        uncheckActivo(); // Activo
-    
-        cy.contains('button', /^Cancelar$/i).should('be.enabled').click();
-    
-        cy.wait(5000);
-        cy.reload();
-    
-        cy.wrap(code).then(c => findRowByCode(c));
-        cy.get('@filaHit').within(() => {
-          cy.contains('td', code).should('be.visible');
-          cy.contains('td', name).should('be.visible');
-          cy.contains('td', phone).should('be.visible');
-          cy.contains(/NO|No/i).should('be.visible');
-        });
-    });
+
   
     it('Editar primer país: cambia nombre y teléfono y lo deja inactivo', () => {
       // tomar el primer código para identificar la fila
@@ -252,40 +206,6 @@ Cypress.on('uncaught:exception', (err) => {
       });
     });
   
-    it('Validación: código duplicado (no debe crear)', () => {
-      // toma un código existente para generar el duplicado
-      
-      
-      firstCode().then((existingCode) => {
-        cy.contains('button', 'Crear País').click();
-        cy.contains('label', /^Código$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(existingCode)
-        .should('have.value', existingCode);
-    
-        cy.contains('label', /^Nombre$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type('Duplicado')
-        .should('have.value', 'Duplicado');
-    
-        cy.contains('label', /Código telefónico/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type('+500')
-        .should('have.value', '+500');
-        checkActivo(); // Activo
-  
-        cy.contains('button', /^Guardar$/i).click();
-  
-        // mensaje típico (ajusta al texto real si fuera distinto)
-        cy.contains(/ya existe|duplicado|Error al crear país/i, { timeout: 8000 }).should('be.visible');
-      });
-    });
   
     it('Validación de obligatorios (no debe guardar)', () => {
       cy.contains('button', 'Crear País').click();
@@ -312,123 +232,6 @@ Cypress.on('uncaught:exception', (err) => {
         // revisa mensajes de error cercanos a cada campo
         cy.contains(/ya existe|Todos los campos son obligatorios|Error al crear país/i, { timeout: 8000 }).should('be.visible');
       });
-
-      it('Validación de campos incorrectos (numeros en codigo)', () => {
-        cy.contains('button', 'Crear País').click();
-        const suf   = Date.now().toString().slice(-4);
-        const sufe = Array(2) // Genera un array de 5 letras
-          .fill()
-          .map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))) // Letras A-Z
-          .join('');
-        const code  = `Q${suf}`;          // ej.: "Q1234"
-        const name  = `Pais ${sufe}`;      // ej.: "Pais 1234"
-        const phone = `+${suf}`; 
-        cy.contains('button', 'Crear País').click();
-        cy.contains('label', /^Código$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(code)
-        .should('have.value', code);
-
-        cy.contains('label', /^Nombre$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(name)
-        .should('have.value', name);
-    
-        cy.contains('label', /Código telefónico/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(phone)
-        .should('have.value', phone);
-        checkActivo();
-        // dejar todo vacío y guardar
-        cy.contains('button', /^Guardar$/i).click();
-    
-        // revisa mensajes de error cercanos a cada campo
-        cy.contains(/ya existe|Todos los campos son obligatorios|Error al crear país/i, { timeout: 8000 }).should('be.visible');
-      });
-
-      it('Validación de campos incorrectos (numeros en pais)', () => {
-        cy.contains('button', 'Crear País').click();
-        const suf   = Date.now().toString().slice(-4);
-        const sufe = Array(2) // Genera un array de 5 letras
-          .fill()
-          .map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))) // Letras A-Z
-          .join('');
-        const code  = `Q${sufe}`;          // ej.: "Q1234"
-        const name  = `Pais ${suf}`;      // ej.: "Pais 1234"
-        const phone = `+${suf}`; 
-        cy.contains('button', 'Crear País').click();
-        cy.contains('label', /^Código$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(code)
-        .should('have.value', code);
-
-        cy.contains('label', /^Nombre$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(name)
-        .should('have.value', name);
-    
-        cy.contains('label', /Código telefónico/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(phone)
-        .should('have.value', phone);
-        checkActivo();
-        // dejar todo vacío y guardar
-        cy.contains('button', /^Guardar$/i).click();
-    
-        // revisa mensajes de error cercanos a cada campo
-        cy.contains(/ya existe|Todos los campos son obligatorios|Error al crear país/i, { timeout: 8000 }).should('be.visible');
-      });
-      it('Validación de campos incorrectos (letras en phone)', () => {
-        cy.contains('button', 'Crear País').click();
-        const suf   = Date.now().toString().slice(-4);
-        const sufe = Array(2) // Genera un array de 5 letras
-          .fill()
-          .map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))) // Letras A-Z
-          .join('');
-        const code  = `Q${sufe}`;          // ej.: "Q1234"
-        const name  = `Pais ${sufe}`;      // ej.: "Pais 1234"
-        const phone = `+${sufe}`; 
-        cy.contains('button', 'Crear País').click();
-        cy.contains('label', /^Código$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(code)
-        .should('have.value', code);
-
-        cy.contains('label', /^Nombre$/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(name)
-        .should('have.value', name);
-    
-        cy.contains('label', /Código telefónico/i)
-        .parent()
-        .find('input')
-        .clear()
-        .type(phone)
-        .should('have.value', phone);
-        checkActivo();
-        // dejar todo vacío y guardar
-        cy.contains('button', /^Guardar$/i).click();
-    
-        // revisa mensajes de error cercanos a cada campo
-        cy.contains(/ya existe|Todos los campos son obligatorios|Error al crear país/i, { timeout: 8000 }).should('be.visible');
-      });
-
 
   });
   

@@ -6,8 +6,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 })
 
 describe('Validación de Seguimiento de Tickets', () => {
-  const baseUrl = 'https://dev.one21.app'
-  
+  const { baseUrl } = require('../../support/urls');
   beforeEach(() => {
     // 1) Ir a login
     cy.visit(`${baseUrl}/login`)

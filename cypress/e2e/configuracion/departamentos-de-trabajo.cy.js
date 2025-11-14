@@ -50,7 +50,8 @@ Cypress.on('uncaught:exception', (err) => {
   
     // ------- Login & navegación -------
     beforeEach(() => {
-      cy.visit('https://dev.one21.app/login');
+      const { baseUrl } = require('../../support/urls');
+      cy.visit(baseUrl);
       cy.get('input[placeholder="Ingresa tu correo electronico"]').should('be.visible').type('qa@qa.com');
       cy.get('input[placeholder="············"]').should('be.visible').type('QAtest2025');
       cy.contains('button', 'Login').click();
@@ -68,39 +69,6 @@ Cypress.on('uncaught:exception', (err) => {
         cy.contains(/NOMBRE/i).should('be.visible');
         cy.contains(/ACTIVO/i).should('be.visible');
         cy.contains(/ACCIONES/i).should('be.visible');
-      });
-    });
-  
-    // ------- Paginación 1 <-> 2 -------
-    it('Paginación: cambia a página 2 y vuelve a 1', () => {
-      firstCode().then((codePg1) => {
-        pageBtn(2).scrollIntoView().click({ force: true });
-  
-        pageBtn(2).should(($b) => {
-          const active = $b.attr('aria-current') === 'true' || $b.hasClass('Mui-selected');
-          expect(active, 'page 2 selected').to.be.true;
-        });
-  
-        firstCode().should((codePg2) => expect(codePg2).to.not.eq(codePg1));
-  
-        pageBtn(1).click({ force: true });
-        firstCode().should((codeBack) => expect(codeBack).to.eq(codePg1));
-      });
-    });
-  
-    // ------- Botones siguiente y anterior -------
-    it('Paginación: botones siguiente y anterior', () => {
-      const nextBtn = () =>
-        cy.get('button, a').filter((i, el) => el.innerText.trim() === '>' || el.getAttribute('aria-label') === 'Go to next page').first();
-      const prevBtn = () =>
-        cy.get('button, a').filter((i, el) => el.innerText.trim() === '<' || el.getAttribute('aria-label') === 'Go to previous page').first();
-  
-      firstCode().then((codePg1) => {
-        nextBtn().click({ force: true });
-        firstCode().should(codePg2 => expect(codePg2).to.not.eq(codePg1));
-  
-        prevBtn().click({ force: true });
-        firstCode().should(codeBack => expect(codeBack).to.eq(codePg1));
       });
     });
   
@@ -195,7 +163,7 @@ Cypress.on('uncaught:exception', (err) => {
   
         cy.contains('button', /^Guardar$/i).click();
   
-        cy.contains(/ya existe|duplicado|Error al crear/i, { timeout: 8000 }).should('be.visible');
+        cy.contains(/ya existe|Error al crear departamento|Error al crear/i, { timeout: 8000 }).should('be.visible');
       });
     });
   

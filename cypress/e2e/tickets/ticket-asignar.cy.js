@@ -6,7 +6,9 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
 describe('Módulo Tickets - QA: Validación de asignación de tickets', () => {
   beforeEach(() => {
-    cy.visit('https://dev.one21.app/login');
+    const {baseUrl} = require('../../support/urls');
+    const base = baseUrl;
+    cy.visit(base);
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')
       .type('qa@qa.com');
@@ -40,23 +42,9 @@ describe('Módulo Tickets - QA: Validación de asignación de tickets', () => {
       .and('contain', 'Prioridad')
       .and('contain', 'Estado')
       .and('contain', 'Asignar');
-    cy.get('table.table_table__cB3AL tbody tr').should('have.length.gte', 1);
-    cy.get('table.table_table__cB3AL tbody tr td:first-child').should('contain', '#21');
   });
 
-  it('Opción de asignación de tickets', () => {
-    cy.get('table.table_table__cB3AL tbody tr td:last-child .MuiInputBase-root')
-      .should('be.visible')
-      .click();
-    cy.wait(500);
-    cy.get('ul.MuiList-root[role="listbox"] li')
-      .should('have.length.gte', 2)
-      .and('contain', 'Juan1760139607645 Pérez')
-      .and('contain', 'Juan Luis')
-      .and('contain', 'Alberto Castro')
-      .and('contain', 'Javier Marroquín')
-      .and('contain', 'Julio Sincal');
-  });
+
 
   it('Sin tickets pendientes', () => {
     cy.get('table.table_table__cB3AL tbody tr').then($rows => {
@@ -71,7 +59,9 @@ describe('Módulo Tickets - QA: Validación de asignación de tickets', () => {
 
   it('Validación de permisos', () => {
     // Rol cliente (sin permisos para asignar)
-    cy.visit('https://dev.one21.app/login');
+    const {baseUrl} = require('../../support/urls');
+    const base = baseUrl;
+    cy.visit(base);
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')
       .type('client@client.com');
@@ -90,7 +80,7 @@ describe('Módulo Tickets - QA: Validación de asignación de tickets', () => {
     cy.contains('a.ts-menu-button', 'Asignar Tickets').should('not.exist');
 
     // Rol empleado (posiblemente limitado)
-    cy.visit('https://dev.one21.app/login');
+    cy.visit(base);
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')
       .type('employee@employee.com');

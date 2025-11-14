@@ -13,7 +13,8 @@ describe('Pruebas de creación y edición de categorías', () => {
   
   beforeEach(() => {
     // 1) Login
-    cy.visit('https://dev.one21.app/login');
+    const { baseUrl } = require('../../support/urls');
+    cy.visit(baseUrl);
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')
       .type('qa@qa.com');
@@ -24,7 +25,7 @@ describe('Pruebas de creación y edición de categorías', () => {
     cy.url().should('include', '/inicio');
 
     // 2) Ir a Categorías
-    cy.visit('https://dev.one21.app/categorias');
+    cy.visit(baseUrl + '/categorias');
 
     
   });

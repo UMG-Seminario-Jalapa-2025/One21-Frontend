@@ -6,7 +6,8 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
 describe('Módulo Personas - QA: Validación de carga de información', () => {
   beforeEach(() => {
-    cy.visit('https://dev.one21.app/login');
+    const { baseUrl } = require('../../support/urls');
+    cy.visit(baseUrl);
     cy.get('input[placeholder="Ingresa tu correo electronico"]')
       .should('be.visible')
       .type('qa@qa.com');
