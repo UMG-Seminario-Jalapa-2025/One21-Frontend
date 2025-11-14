@@ -243,8 +243,15 @@ export default function PersonasPage() {
     }
   }
 
-  const handleHacerProveedor = (persona: Persona) => {
+  const handleHacerAdministrador = (persona: Persona) => {
     handleActualizarPartner({ partnerId: persona.id, isVendor: true })
+
+    if (persona.email) {
+        asignarRol(persona.email, ['app-admin'])
+      }
+
+      showAlert('success', 'Administrador creado con éxito')
+
   }
 
   // Eliminar persona
@@ -322,9 +329,13 @@ export default function PersonasPage() {
                       <i className='tabler-user-share' />
                     </IconButton>
                   </Tooltip>
+                </>
+              )}
 
-                  <Tooltip title='Hacer proveedor'>
-                    <IconButton color='warning' size='small' onClick={() => handleHacerProveedor(persona)}>
+              {persona.isCustomer && !persona.isVendor && persona.isEmployee && (
+                <>
+                  <Tooltip title='Hacer Administrador'>
+                    <IconButton color='warning' size='small' onClick={() => handleHacerAdministrador(persona)}>
                       <i className='tabler-users-group' />
                     </IconButton>
                   </Tooltip>
